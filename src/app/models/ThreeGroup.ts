@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import BaseModel, { ModelTransformation, ModelInfo } from './ThreeBaseModel.ts';
+import BaseModel, { ModelTransformation, ModelInfo } from './ThreeBaseModel';
 import type ModelGroup from './ModelGroup';
 import ThreeModel from './ThreeModel';
 import ThreeUtils from '../three-extensions/ThreeUtils';

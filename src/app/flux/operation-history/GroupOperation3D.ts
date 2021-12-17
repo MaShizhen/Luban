@@ -1,7 +1,7 @@
 import Operation from './Operation';
 import type Model from '../../models/ThreeBaseModel';
 import type ThreeModel from '../../models/ThreeModel';
-import ThreeGroup from '../../models/ThreeGroup.ts';
+import ThreeGroup from '../../models/ThreeGroup';
 import type ModelGroup from '../../models/ModelGroup';
 
 type GroupState = {

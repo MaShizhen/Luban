@@ -5,13 +5,13 @@ import uuid from 'uuid';
 import _ from 'lodash';
 import i18n from '../lib/i18n';
 
-import Model from './ThreeBaseModel.ts';
+import Model from './ThreeBaseModel';
 import ThreeModel from './ThreeModel';
 import SvgModel from './SvgModel';
 import { SELECTEVENT } from '../constants';
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
-import ThreeGroup from './ThreeGroup.ts';
+import ThreeGroup from './ThreeGroup';
 
 const EVENTS = {
     UPDATE: { type: 'update' }

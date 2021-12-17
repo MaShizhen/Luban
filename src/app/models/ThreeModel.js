@@ -6,7 +6,7 @@ import {
 
 import ThreeUtils from '../three-extensions/ThreeUtils';
 
-import BaseModel from './ThreeBaseModel.ts';
+import BaseModel from './ThreeBaseModel';
 
 const materialOverstepped = new THREE.MeshPhongMaterial({
     color: 0xff0000,

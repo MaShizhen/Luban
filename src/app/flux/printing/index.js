@@ -38,9 +38,9 @@ import DeleteOperation3D from '../operation-history/DeleteOperation3D';
 import AddOperation3D from '../operation-history/AddOperation3D';
 import VisibleOperation3D from '../operation-history/VisibleOperation3D';
 import OperationHistory from '../operation-history/OperationHistory';
-import GroupOperation3D from '../operation-history/GroupOperation3D.ts';
-import ThreeGroup from '../../models/ThreeGroup.ts';
-import UngroupOperation3D from '../operation-history/UngroupOperation3D.ts';
+import GroupOperation3D from '../operation-history/GroupOperation3D';
+import ThreeGroup from '../../models/ThreeGroup';
+import UngroupOperation3D from '../operation-history/UngroupOperation3D';
 
 const operationHistory = new OperationHistory();
 
