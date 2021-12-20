@@ -297,6 +297,7 @@ export const actions = {
             });
 
             controller.on('taskCompleted:generateToolPath', (taskResult) => {
+                console.log('------------------------', taskResult);
                 if (headType !== taskResult.headType) {
                     return;
                 }
@@ -380,8 +381,8 @@ export const actions = {
                     const { toolPathGroup } = getState()[headType];
 
                     const toolpath = toolPathGroup._getToolPath(taskResult.taskId);
-
                     if (toolpath) {
+                        // from toolpath.object
                         toolpath.onGenerateToolpathModel(taskResult.data[index], taskResult.filenames[index], renderResult);
                     }
 
@@ -2111,7 +2112,7 @@ export const actions = {
                             throw new Error('geometry invalid');
                         }
                     },
-                    () => {}, // onprogress
+                    () => { }, // onprogress
                     (err) => {
                         onError && onError(err);
                         dispatch(actions.updateState(headType, {

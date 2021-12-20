@@ -98,7 +98,9 @@ const ToolpathItem = ({
                         className={classNames(
                             // ...getIconStatus(toolPath.status)
                         )}
-                    />
+                    >
+                        {`${Array.from(toolPath.modelMap.keys()).length}:${toolPath.modelIDs.length}`}
+                    </i>
                     {!toolPath.visible && (
                         <SvgIcon
                             size={24}
@@ -281,6 +283,7 @@ const ToolPathListBox = (props) => {
 
                     <div className={styles['object-list-box']}>
                         {toolPaths && toolPaths.map((toolPath) => {
+                            console.log(Array.from(toolPath.modelMap.keys()).join(';'));
                             return (
                                 <ToolpathItem
                                     toolPath={toolPath}

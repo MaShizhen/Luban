@@ -163,6 +163,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
             const gcodeConfig = {
                 ...toolPath.gcodeConfig
             };
+            // 条件会一直成立吧
             if (currentToolDefinition) {
                 toolParams.definitionId = currentToolDefinition.definitionId;
                 toolParams.definitionName = currentToolDefinition.name;

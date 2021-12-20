@@ -69,6 +69,7 @@ const Output = ({ headType }) => {
             }
             dispatch(projectActions.exportFile(gcodeFile.uploadName, gcodeFile.renderGcodeFileName));
         },
+        // MSZ
         onProcess: () => {
             dispatch(editorActions.createToolPath(headType));
         },

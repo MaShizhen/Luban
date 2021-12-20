@@ -417,6 +417,8 @@ class Visualizer extends Component {
     };
 
     render() {
+        console.log('this.props.toolPathGroup.object = ', this.props.toolPathGroup.object);
+
         // const isModelSelected = !!this.props.selectedModelID;
         const isOnlySelectedOneModel = (this.props.selectedModelArray && this.props.selectedModelArray.length > 0);
         // const hasModel = this.props.hasModel;

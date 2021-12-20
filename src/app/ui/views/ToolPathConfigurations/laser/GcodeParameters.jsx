@@ -35,9 +35,10 @@ class GcodeParameters extends PureComponent {
         const isSVG = type === TOOLPATH_TYPE_VECTOR;
         const isImage = type === TOOLPATH_TYPE_IMAGE;
 
+        // get laser default gcodeParams from constants
         const allDefinition = LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION;
         Object.keys(allDefinition).forEach((key) => {
-            allDefinition[key].default_value = gcodeConfig[key];
+            allDefinition[key].default_value = gcodeConfig[key]; // change default_value to toolpath.gcodeConfig
             // isGcodeConfig is true means to use updateGcodeConfig, false means to use updateToolConfig
             allDefinition[key].isGcodeConfig = false;
         });
@@ -46,7 +47,7 @@ class GcodeParameters extends PureComponent {
             if (!allDefinition[toHump(key)]) {
                 allDefinition[toHump(key)] = {};
             }
-            allDefinition[toHump(key)].default_value = value.default_value;
+            allDefinition[toHump(key)].default_value = value.default_value; // change default_value to activeToolDefinition
         });
 
         const pathType = allDefinition.pathType.default_value;

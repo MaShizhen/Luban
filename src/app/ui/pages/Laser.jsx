@@ -32,6 +32,7 @@ import StackedModel from '../widgets/LaserStackedModel';
 import Modal from '../components/Modal';
 import { Button } from '../components/Buttons';
 
+
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
 
@@ -372,6 +373,7 @@ function Laser({ location }) {
                     <LaserVisualizer
                         widgetId="laserVisualizer"
                     />
+
                     {enabledIntro && (
                         <Steps
                             enabled={enabledIntro}

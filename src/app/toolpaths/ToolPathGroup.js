@@ -251,7 +251,8 @@ class ToolPathGroup {
         });
         this.selectedToolPathArray.forEach((id) => {
             const selectedToolpath = this._getToolPath(id);
-            if (selectedToolpath && selectedToolpath.modelIDs) {
+            // 不能只高亮选中的
+            if (selectedToolpath && selectedToolpath.visible && selectedToolpath.modelIDs) {
                 for (const modelId of selectedToolpath?.modelIDs) {
                     const model = modelGroup.getModel(modelId);
                     model && model.updateIsToolPathSelect(true);

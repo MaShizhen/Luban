@@ -30,7 +30,8 @@ export const processActions = {
 
         // start generate toolpath
         toolPathGroup.toolPaths.forEach((toolPath) => {
-            dispatch(processActions.commitGenerateToolPath(headType, toolPath.id));
+            console.log(toolPath.visible);
+            toolPath.visible && dispatch(processActions.commitGenerateToolPath(headType, toolPath.id));
         });
     },
 
@@ -53,8 +54,11 @@ export const processActions = {
             progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW, [visibleToolPathsLength, visibleToolPathsLength, visibleToolPathsLength]);
         }
         toolPathGroup.toolPaths.forEach((toolPath) => {
+            // 把所有toolpath都设置为waring，那隐藏的需要考虑吗。并且waring也并不太符合语义
             toolPath.setWarningStatus();
+            // 清理所有toolpathObjects是否必要
             toolPath.clearModelObjects();
+            // 看不太懂这里做了什么，貌似是无用功
             toolPathGroup.toolPathObjects.remove(toolPath.object);
             toolPath.object = toolPath.object.clone();
             toolPathGroup.toolPathObjects.add(toolPath.object);
@@ -63,6 +67,7 @@ export const processActions = {
         dispatch(baseActions.updateState(headType, {
             needToPreview: false
         }));
+        // 重新计算所有toolpath
         dispatch(processActions.recalculateAllToolPath(headType));
         dispatch(processActions.showToolPathGroupObject(headType));
         // Different models cannot be selected in process page
