@@ -1200,9 +1200,13 @@ class ModelGroup extends EventEmitter {
     onModelAfterTransform() {
         const selectedModelArray = this.selectedModelArray;
         const { recovery } = this.unselectAllModels({ recursive: true });
+        const groupsNeedUpdateCenter = new Set();
         selectedModelArray.forEach((selected) => {
             if (selected.sourceType === '3d') {
                 selected.stickToPlate();
+                if (selected.parent) {
+                    groupsNeedUpdateCenter.add(selected.parent);
+                }
             }
             if (selected.supportTag && selected.isSelected) {
                 selected.meshObject.parent.position.setZ(0);
@@ -1211,6 +1215,11 @@ class ModelGroup extends EventEmitter {
             selected.computeBoundingBox();
         });
         this.selectedGroup.shouldUpdateBoundingbox = false;
+
+        groupsNeedUpdateCenter.forEach(threeGroup => {
+            threeGroup.add(threeGroup.disassemble());
+            threeGroup.stickToPlate();
+        });
 
         this.prepareSelectedGroup();
         // update model's boundingbox which has supports
