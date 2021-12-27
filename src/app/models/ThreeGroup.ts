@@ -155,7 +155,7 @@ export default class ThreeGroup extends BaseModel {
             }
             this.extruderConfig = tempExtruderConfig;
         }
-        this.children.forEach((model: ThreeModel) => model.onTransform());
+        this.onTransform();
     }
 
     disassemble(): ThreeModel[] {
@@ -346,7 +346,7 @@ export default class ThreeGroup extends BaseModel {
     setOversteppedAndSelected(overstepped: boolean, isSelected: boolean) {
         this.overstepped = overstepped;
         this.children.forEach(model => {
-            model.overstepped = overstepped;
+            model.setOversteppedAndSelected(overstepped, model.isSelected);
         });
         // this.setSelected(isSelected);
         this.isSelected = isSelected;

@@ -262,7 +262,7 @@ class ModelGroup extends EventEmitter {
         }
         model.meshObject.removeEventListener('update', this.onModelUpdate);
         if (model.parent instanceof ThreeGroup) {
-            this.models = this.traverseModels(this.models, (item) => {
+            this.models = this.filterModels(this.models, (item) => {
                 if (model === item) {
                     if (item.parent.children.length === 1) {
                         this.object.remove(item.parent.meshObject);
@@ -274,6 +274,7 @@ class ModelGroup extends EventEmitter {
         } else {
             this.models = this.models.filter(item => item !== model);
         }
+        this.stickToPlateAndCheckOverstepped(model);
         this.modelChanged();
     }
 
@@ -614,16 +615,25 @@ class ModelGroup extends EventEmitter {
         return this.getState(false);
     }
 
+    traverseModels(models, callback) {
+        models.forEach(model => {
+            if (model instanceof ThreeGroup) {
+                this.traverseModels(model.children, callback);
+            }
+            (typeof callback === 'function') && callback(model);
+        });
+    }
+
     /**
-     * traverse models, If the return value of callback is false, it will filter
-     * @param {*} models
-     * @param {*} callback Callback function has a parameter, which is an item of the loop
+     * filter models, If the return value of callback is false, it will filter
+     * @param {Array} models
+     * @param {Function} callback Callback function has a parameter, which is an item of the loop
      * @returns new models
      */
-    traverseModels(models, callback) {
+    filterModels(models, callback) {
         return models.filter((model) => {
             if (model instanceof ThreeGroup) {
-                return callback(model) !== false && this.traverseModels(model.children, callback).length > 0;
+                return callback(model) !== false && this.filterModels(model.children, callback).length > 0;
             }
             if (typeof callback === 'function') {
                 return callback(model);
@@ -631,7 +641,7 @@ class ModelGroup extends EventEmitter {
             return true;
         }).map((model) => {
             if (model instanceof ThreeGroup) {
-                model.children = this.traverseModels(model.children, callback);
+                model.children = this.filterModels(model.children, callback);
                 return model;
             }
             return model;
@@ -1059,7 +1069,7 @@ class ModelGroup extends EventEmitter {
                 hasModel: this.hasModel()
             };
         } catch (error) {
-            console.error('onModelTransform error', error);
+            console.trace('onModelTransform error', error);
             return {};
         }
     }
@@ -1200,13 +1210,9 @@ class ModelGroup extends EventEmitter {
     onModelAfterTransform() {
         const selectedModelArray = this.selectedModelArray;
         const { recovery } = this.unselectAllModels({ recursive: true });
-        const groupsNeedUpdateCenter = new Set();
         selectedModelArray.forEach((selected) => {
             if (selected.sourceType === '3d') {
                 selected.stickToPlate();
-                if (selected.parent) {
-                    groupsNeedUpdateCenter.add(selected.parent);
-                }
             }
             if (selected.supportTag && selected.isSelected) {
                 selected.meshObject.parent.position.setZ(0);
@@ -1215,11 +1221,6 @@ class ModelGroup extends EventEmitter {
             selected.computeBoundingBox();
         });
         this.selectedGroup.shouldUpdateBoundingbox = false;
-
-        groupsNeedUpdateCenter.forEach(threeGroup => {
-            threeGroup.add(threeGroup.disassemble());
-            threeGroup.stickToPlate();
-        });
 
         this.prepareSelectedGroup();
         // update model's boundingbox which has supports

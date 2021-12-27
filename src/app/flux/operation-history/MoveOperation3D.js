@@ -45,7 +45,7 @@ export default class MoveOperation3D extends Operation {
             } else {
                 model.meshObject.position.set(this.state.from.positionX, this.state.from.positionY, this.state.from.positionZ);
             }
+            modelGroup.stickToPlateAndCheckOverstepped(model);
         }
-        modelGroup.stickToPlateAndCheckOverstepped(model);
     }
 }

@@ -82,11 +82,11 @@ export default class DeleteOperation3D extends Operation {
                 model.meshObject.scale.copy(this.state.transformation.scale);
                 model.meshObject.rotation.copy(this.state.transformation.rotation);
             }
-            model.stickToPlate();
         }
         if (model.isSelected) {
             model.setSelected(false);
         }
+        modelGroup.stickToPlateAndCheckOverstepped(model);
 
         model.meshObject.addEventListener('update', modelGroup.onModelUpdate);
         modelGroup.modelChanged();
