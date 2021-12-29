@@ -1733,9 +1733,11 @@ class ModelGroup extends EventEmitter {
 
     stickToPlateAndCheckOverstepped(model) {
         model.computeBoundingBox();
-        model.stickToPlate();
-        const overstepped = this._checkOverstepped(model);
-        model.setOversteppedAndSelected(overstepped, model.isSelected);
+        if (model.sourceType === '3d') {
+            model.stickToPlate();
+            const overstepped = this._checkOverstepped(model);
+            model.setOversteppedAndSelected(overstepped, model.isSelected);
+        }
     }
 
     analyzeSelectedModelRotationAsync() {
