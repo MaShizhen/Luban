@@ -577,6 +577,7 @@ class ModelGroup extends EventEmitter {
 
     // TODO: model or modelID, need rename this method and add docs
     // use for widget
+    // If isMultiSelect is equal to true, it is mutually exclusive
     selectModelById(modelID, isMultiSelect = false) {
         let selectModel = null;
         this.traverseModels(this.models, (model) => {
@@ -599,7 +600,13 @@ class ModelGroup extends EventEmitter {
                     if (isModelAcrossGroup) {
                         this.unselectAllModels({ recursive: true });
                     }
-                    this.addModelToSelectedGroup(selectModel);
+
+                    if (selectModel.parent && this.selectedModelArray.length === selectModel.parent.children.length - 1) {
+                        this.unselectAllModels({ recursive: true });
+                        this.addModelToSelectedGroup(selectModel.parent);
+                    } else {
+                        this.addModelToSelectedGroup(selectModel);
+                    }
                 } else {
                     this.removeModelFromSelectedGroup(selectModel);
                 }
@@ -702,7 +709,12 @@ class ModelGroup extends EventEmitter {
                     if (this.selectedModelArray.length && (this.selectedModelArray[0].supportTag !== model.supportTag || model.supportTag)) {
                         break;
                     }
-                    this.addModelToSelectedGroup(model);
+                    if (model.parent && this.selectedModelArray.length === model.parent.children.length - 1) {
+                        this.unselectAllModels({ recursive: true });
+                        this.addModelToSelectedGroup(model.parent);
+                    } else {
+                        this.addModelToSelectedGroup(model);
+                    }
                 }
                 break;
             case SELECTEVENT.REMOVESELECT:
@@ -807,6 +819,7 @@ class ModelGroup extends EventEmitter {
         });
     }
 
+    // Should the parameter be omitted ?
     unselectAllModels({ recursive } = { recursive: false }) {
         const cancelSelectedModels = this.selectedModelArray.slice(0);
         this.selectedModelArray = [];
@@ -862,7 +875,7 @@ class ModelGroup extends EventEmitter {
         if (modelsToCopy.length === 0) return this._getEmptyState();
 
         // Unselect all models
-        this.unselectAllModels();
+        this.unselectAllModels({ recursive: true });
 
         modelsToCopy.forEach((model) => {
             const newModel = model.clone(this);
@@ -1055,7 +1068,7 @@ class ModelGroup extends EventEmitter {
         try {
             // this.selectedModelIDArray.splice(0);
             this.selectedModelArray.forEach((item) => {
-            // this.selectedModelIDArray.push(item.modelID);
+                // this.selectedModelIDArray.push(item.modelID);
                 item.onTransform();
             });
             const { sourceType, mode, transformation, boundingBox, originalName } = this.selectedModelArray[0];
@@ -1077,8 +1090,8 @@ class ModelGroup extends EventEmitter {
     shouldApplyScaleToObjects(scaleX, scaleY, scaleZ) {
         return this.selectedGroup.children.every((meshObject) => {
             if (Math.abs(scaleX * meshObject.scale.x) < 0.01
-              || Math.abs(scaleY * meshObject.scale.y) < 0.01
-              || Math.abs(scaleZ * meshObject.scale.z) < 0.01
+                || Math.abs(scaleY * meshObject.scale.y) < 0.01
+                || Math.abs(scaleZ * meshObject.scale.z) < 0.01
             ) {
                 return false; // should disable
             }
@@ -1799,7 +1812,15 @@ class ModelGroup extends EventEmitter {
                     // Fix Z-fighting
                     // https://sites.google.com/site/threejstuts/home/polygon_offset
                     // https://stackoverflow.com/questions/40328722/how-can-i-solve-z-fighting-using-three-js
-                    const material = new MeshBasicMaterial({ color: 0x1890FF, depthWrite: false, transparent: true, opacity: 0.3, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -5 });
+                    const material = new MeshBasicMaterial({
+                        color: 0x1890FF,
+                        depthWrite: false,
+                        transparent: true,
+                        opacity: 0.3,
+                        polygonOffset: true,
+                        polygonOffsetFactor: -1,
+                        polygonOffsetUnits: -5
+                    });
                     const mesh = new Mesh(geometry, material);
                     mesh.userData = {
                         index: rowInfo.faceId
@@ -1875,7 +1896,20 @@ class ModelGroup extends EventEmitter {
         // check visible models or groups
         if (selectedModelArray.some(model => model.visible)) {
             // insert group to the first model position in selectedModelArray
-            const indexesOfSelectedModels = selectedModelArray.map(model => {
+            selectedModelArray.forEach(model => {
+                if (model.parent && model.parent instanceof ThreeGroup) {
+                    const index = model.parent.children.findIndex(subModel => subModel.modelID === model.modelID);
+                    model.parent.children.splice(index, 1);
+                    this.models.push(model);
+                    model.parent.meshObject.remove(model.meshObject);
+                    if (model.parent.meshObject.children.length === 0) {
+                        this.object.remove(model.parent.meshObject);
+                        this.models = this.models.filter(m => m.modelID !== model.parent.modelID);
+                    }
+                }
+            });
+
+            const indexesOfSelectedModels = selectedModelArray.map((model) => {
                 return this.models.indexOf(model);
             });
             const modelsToGroup = this._flattenGroups(selectedModelArray);
@@ -1889,6 +1923,13 @@ class ModelGroup extends EventEmitter {
             this.object.add(group.meshObject);
             this.addModelToSelectedGroup(group);
             group.stickToPlate();
+
+            const point = this._computeAvailableXY(group, this.models.filter(model => model !== group));
+            group.meshObject.position.x = point.x;
+            group.meshObject.position.y = point.y;
+            group.meshObject.updateMatrix();
+            group.computeBoundingBox();
+            group.onTransform();
         }
         return this.getState();
     }

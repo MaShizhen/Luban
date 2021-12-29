@@ -54,7 +54,7 @@ const isDefaultQualityDefinition = (definitionId) => {
 const getRealSeries = (series) => {
     if (
         series === MACHINE_SERIES.ORIGINAL_LZ.value
-       || series === MACHINE_SERIES.CUSTOM.value
+        || series === MACHINE_SERIES.CUSTOM.value
     ) {
         series = MACHINE_SERIES.ORIGINAL.value;
     }
@@ -1878,7 +1878,7 @@ export const actions = {
                 }));
                 dispatch(actions.destroyGcodeLine());
                 dispatch(actions.displayModel());
-            }).catch(() => {});
+            }).catch(() => { });
         }
     },
 
@@ -1922,18 +1922,43 @@ export const actions = {
         });
         const operations = new Operations();
 
+        const { recovery } = modelGroup.unselectAllModels({ recursive: true });
+
+        const modelsInGroup = selectedModels.filter((selectd) => {
+            return selectd.parent && selectd.parent instanceof ThreeGroup;
+        }).reduce((pre, selectd) => {
+            const group = selectd.parent.clone(modelGroup);
+            pre.set(selectd.modelID, {
+                groupModel: group,
+                groupMesh: selectd.parent.meshObject.clone(),
+                modelTransformation: selectd.transformation,
+                groupTransformation: group.transformation
+            });
+            return pre;
+        }, new Map());
+        recovery();
+
+
         dispatch(actions.clearAllManualSupport(operations));
         const modelState = modelGroup.group();
 
         const modelsAfterGroup = modelGroup.getModels().slice(0);
-
+        const newGroup = modelGroup.getSelectedModelArray()[0];
         const operation = new GroupOperation3D({
             groupChildrenMap,
             modelsBeforeGroup,
             modelsAfterGroup,
             selectedModels,
-            target: modelGroup.getSelectedModelArray()[0],
-            modelGroup
+            target: newGroup,
+            targetTransformation: { ...newGroup.transformation },
+            targetChildrenTransformation: newGroup.children.reduce((pre, subModel) => {
+                pre.set(subModel.modelID, {
+                    ...subModel.transformation
+                });
+                return pre;
+            }, new Map()),
+            modelGroup,
+            modelsInGroup
         });
         operations.push(operation);
         operations.registCallbackAfterAll(() => {

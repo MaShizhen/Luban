@@ -36,7 +36,7 @@ export type ModelInfo = {
     visible?: boolean,
     transformation: ModelTransformation,
     processImageName: string,
-    supportTag: boolean,
+    supportTag?: boolean,
     extruderConfig?: any,
     children?: Array<ModelInfo>
 };

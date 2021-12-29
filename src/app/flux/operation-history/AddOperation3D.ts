@@ -1,25 +1,39 @@
+import * as THREE from 'three';
+import type ModelGroup from '../../models/ModelGroup';
 import ThreeGroup from '../../models/ThreeGroup';
+import ThreeModel from '../../models/ThreeModel';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 import Operation from './Operation';
 
-export default class AddOperation3D extends Operation {
-    state = {};
+type AddOperationProp = {
+    target: ThreeGroup | ThreeModel,
+}
 
-    constructor(state) {
+type AddOperationState = {
+    target: ThreeGroup | ThreeModel,
+    modelGroup: ModelGroup
+    transform: Map<string, {
+        position: THREE.Vector3,
+        scale: THREE.Vector3,
+        rotation: THREE.Euler
+    }>
+}
+
+export default class AddOperation3D extends Operation<AddOperationState> {
+    constructor(props: AddOperationProp) {
         super();
         this.state = {
-            target: null,
-            parent: null,
+            target: props.target,
             transform: new Map(),
-            ...state
+            modelGroup: props.target.modelGroup
         };
     }
 
-    redo() {
+    public redo() {
         const model = this.state.target;
-        const modelGroup = model.modelGroup;
+        const modelGroup = this.state.modelGroup;
 
-        if (model.supportTag) {
+        if (model instanceof ThreeModel && model.supportTag) {
             if (!model.target) return;
             model.target.meshObject.add(model.meshObject); // restore the parent-child relationship
         } else {
@@ -51,13 +65,13 @@ export default class AddOperation3D extends Operation {
         modelGroup.modelChanged();
     }
 
-    undo() {
+    public undo() {
         const model = this.state.target;
-        const modelGroup = model.modelGroup;
+        const modelGroup = this.state.modelGroup;
 
         if (model.isSelected) {
             ThreeUtils.removeObjectParent(model.meshObject);
-            if (model.supportTag) {
+            if (model instanceof ThreeModel && model.supportTag) {
                 ThreeUtils.setObjectParent(model.meshObject, model.target.meshObject);
             } else {
                 ThreeUtils.setObjectParent(model.meshObject, modelGroup.object);

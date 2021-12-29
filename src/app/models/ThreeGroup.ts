@@ -32,6 +32,7 @@ export default class ThreeGroup extends BaseModel {
 
     meshObject: THREE.Object3D;
 
+    // eslint-disable-next-line no-use-before-define
     children: Array<ThreeModel | ThreeGroup>;
 
     boundingBox: THREE.Box3;
@@ -49,8 +50,6 @@ export default class ThreeGroup extends BaseModel {
     sourceType: string = '3d';
 
     modelName: string;
-
-    supportTag: boolean;
 
     isSelected: boolean = false;
 
@@ -75,6 +74,7 @@ export default class ThreeGroup extends BaseModel {
 
     mode: string;
 
+    // eslint-disable-next-line no-use-before-define
     parent: ThreeGroup = null;
 
     modelID: string;
@@ -392,7 +392,6 @@ export default class ThreeGroup extends BaseModel {
             // visible: this.visible,
             transformation: this.transformation,
             processImageName: this.processImageName,
-            supportTag: this.supportTag
         };
         this.children.forEach(model => {
             clonedSubModels.push(model.clone(modelGroup));
@@ -571,9 +570,9 @@ export default class ThreeGroup extends BaseModel {
         return result;
     }
 
-    setSupportPosition() {}
+    setSupportPosition() { }
 
-    generateSupportGeometry() {}
+    generateSupportGeometry() { }
 
     setVertexColors() {
         this.traverse((model) => {
@@ -601,7 +600,7 @@ export default class ThreeGroup extends BaseModel {
     getSerializableConfig(): ModelInfo {
         const {
             modelID, limitSize, headType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, config, mode,
-            transformation, processImageName, supportTag, visible, extruderConfig, modelName
+            transformation, processImageName, visible, extruderConfig, modelName
         } = this;
         const children = this.children.map(model => {
             const serializableConfig: ModelInfo = model.getSerializableConfig();
@@ -623,7 +622,6 @@ export default class ThreeGroup extends BaseModel {
             visible,
             transformation,
             processImageName,
-            supportTag,
             extruderConfig,
             children,
             modelName

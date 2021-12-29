@@ -1,53 +1,68 @@
-import ModelGroup from '../../models/ModelGroup';
+import * as THREE from 'three';
+import type ModelGroup from '../../models/ModelGroup';
 import ThreeGroup from '../../models/ThreeGroup';
 import ThreeUtils from '../../three-extensions/ThreeUtils';
 import Operation from './Operation';
+import ThreeModel from '../../models/ThreeModel';
 
+type DeleteOperationProp = {
+    target: ThreeGroup | ThreeModel,
+};
 
-export default class DeleteOperation3D extends Operation {
-    constructor(state) {
+type DeleteOperationState = {
+    target: ThreeGroup | ThreeModel,
+    modelGroup: ModelGroup
+    transformation: {
+        position: THREE.Vector3,
+        scale: THREE.Vector3,
+        rotation: THREE.Euler
+    }
+};
+
+export default class DeleteOperation3D extends Operation<DeleteOperationState> {
+    constructor(props: DeleteOperationProp) {
         super();
-        this.state = {
-            target: null,
-            ...state,
-            transformation: {}
-        };
+
         // an object to be deleted will be selected at first, unwrapped from parent group
-        const model = this.state.target;
-        const modelGroup = model.modelGroup;
+        const model = props.target;
         if (model.isSelected) {
             ThreeUtils.removeObjectParent(model.meshObject);
-            if (!model.supportTag) {
+            if (model instanceof ThreeModel && model.supportTag) {
+                ThreeUtils.setObjectParent(model.meshObject, model.target.meshObject);
+            } else {
                 if (model.parent) {
                     ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject);
                 } else {
-                    ThreeUtils.setObjectParent(model.meshObject, modelGroup.object);
+                    ThreeUtils.setObjectParent(model.meshObject, props.target.modelGroup.object);
                 }
-            } else {
-                ThreeUtils.setObjectParent(model.meshObject, model.target.meshObject);
             }
         }
-        this.state.transformation = {
-            position: model.meshObject.position.clone(),
-            scale: model.meshObject.scale.clone(),
-            rotation: model.meshObject.rotation.clone()
+
+        this.state = {
+            target: props.target,
+            modelGroup: props.target.modelGroup,
+            transformation: {
+                position: model.meshObject.position.clone(),
+                scale: model.meshObject.scale.clone(),
+                rotation: model.meshObject.rotation.clone()
+            }
         };
     }
 
-    redo() {
+    public redo() {
         const model = this.state.target;
-        const modelGroup = model.modelGroup;
+        const modelGroup = this.state.modelGroup;
 
         if (model.isSelected) {
             ThreeUtils.removeObjectParent(model.meshObject);
-            if (!model.supportTag) {
+            if (model instanceof ThreeModel && model.supportTag) {
+                ThreeUtils.setObjectParent(model.meshObject, model.target.meshObject);
+            } else {
                 if (model.parent) {
                     ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject);
                 } else {
                     ThreeUtils.setObjectParent(model.meshObject, modelGroup.object);
                 }
-            } else {
-                ThreeUtils.setObjectParent(model.meshObject, model.target.meshObject);
             }
         }
         modelGroup.removeModel(model);
@@ -59,11 +74,11 @@ export default class DeleteOperation3D extends Operation {
         modelGroup.modelChanged();
     }
 
-    undo() {
+    public undo() {
         const model = this.state.target;
-        const modelGroup = model.modelGroup as ModelGroup;
+        const modelGroup = this.state.modelGroup;
 
-        if (model.supportTag) {
+        if (model instanceof ThreeModel && model.supportTag) {
             if (!model.target) return;
             modelGroup.models = modelGroup.models.concat(model);
             model.target.meshObject.add(model.meshObject); // restore the parent-child relationship
