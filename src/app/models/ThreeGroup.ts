@@ -263,6 +263,21 @@ export default class ThreeGroup extends BaseModel {
         this.meshObject.visible = value;
     }
 
+    scaleToFit(size) {
+        const revertParent = ThreeUtils.removeObjectParent(this.meshObject);
+        const modelSize = new THREE.Vector3();
+        this.computeBoundingBox();
+        this.boundingBox.getSize(modelSize);
+        const scalar = ['x', 'y', 'z'].reduce((prev, key) => Math.min((size[key] - 5) / modelSize[key], prev), Number.POSITIVE_INFINITY);
+        this.meshObject.scale.multiplyScalar(scalar);
+        this.meshObject.position.set(0, 0, 0);
+        this.meshObject.updateMatrix();
+        this.setSelected();
+        this.stickToPlate();
+        this.onTransform();
+        revertParent();
+    }
+
     /**
      * Experimental
      * @returns ModelTransformation
@@ -573,11 +588,13 @@ export default class ThreeGroup extends BaseModel {
     }
 
     cloneMeshWithoutSupports(): THREE.Object3D {
-        const clonedGroup = this.meshObject.clone();
+        const clonedGroup = new THREE.Group();
         this.children.forEach(model => {
             const mesh: THREE.Mesh = model.cloneMeshWithoutSupports() as unknown as THREE.Mesh;
             clonedGroup.add(mesh);
         });
+        this.meshObject.updateMatrixWorld();
+        clonedGroup.applyMatrix4(this.meshObject.matrixWorld);
         return clonedGroup;
     }
 
