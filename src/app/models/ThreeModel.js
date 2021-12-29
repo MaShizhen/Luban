@@ -43,7 +43,9 @@ class ThreeModel extends BaseModel {
 
     isSelected = false;
 
-    target = null
+    target = null;
+
+    supportTag = false;
 
     constructor(modelInfo, modelGroup) {
         super(modelInfo, modelGroup);

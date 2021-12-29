@@ -1,5 +1,5 @@
-import ThreeGroup from '../../models/ThreeGroup';
-import ThreeModel from '../../models/ThreeModel';
+import type ThreeGroup from '../../models/ThreeGroup';
+import type ThreeModel from '../../models/ThreeModel';
 import Operation from './Operation';
 
 type VisibleState = {
@@ -7,19 +7,18 @@ type VisibleState = {
     visible: boolean
 };
 
-export default class VisibleOperation3D extends Operation {
+export default class VisibleOperation3D extends Operation<VisibleState> {
     state: VisibleState;
 
-    constructor(state) {
+    constructor(state: VisibleState) {
         super();
         this.state = {
-            target: null,
-            visible: true,
-            ...state
+            target: state.target,
+            visible: state.visible || true,
         };
     }
 
-    redo() {
+    public redo() {
         const model = this.state.target;
         const modelGroup = model.modelGroup;
 
@@ -27,7 +26,7 @@ export default class VisibleOperation3D extends Operation {
         modelGroup.modelChanged();
     }
 
-    undo() {
+    public undo() {
         const model = this.state.target;
         const modelGroup = model.modelGroup;
 

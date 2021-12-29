@@ -16,22 +16,19 @@ type UngroupState = {
     subModelStates: ModelState[]
     modelGroup: ModelGroup
 };
-export default class UngroupOperation3D extends Operation {
-    state: UngroupState;
-
-    constructor(state) {
+export default class UngroupOperation3D extends Operation<UngroupState> {
+    constructor(props: UngroupState) {
         super();
         this.state = {
-            modelsBeforeUngroup: [],
-            target: null,
-            groupTransformation: null,
-            subModelStates: [],
-            modelGroup: null,
-            ...state
+            modelsBeforeUngroup: props.modelsBeforeUngroup || [],
+            target: props.target || null,
+            groupTransformation: props.groupTransformation || null,
+            subModelStates: props.subModelStates || [],
+            modelGroup: props.modelGroup || null,
         };
     }
 
-    redo() {
+    public redo() {
         const target = this.state.target;
         const modelGroup = this.state.modelGroup;
 
@@ -41,7 +38,7 @@ export default class UngroupOperation3D extends Operation {
         modelGroup.unselectAllModels();
     }
 
-    undo() {
+    public undo() {
         const target = this.state.target;
         const modelGroup = this.state.modelGroup;
         const subModelStates = this.state.subModelStates;

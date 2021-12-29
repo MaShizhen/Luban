@@ -630,7 +630,9 @@ const mapDispatchToProps = (dispatch) => ({
     arrangeAllModels: () => dispatch(printingActions.arrangeAllModels()),
     onModelTransform: () => dispatch(printingActions.onModelTransform()),
     onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
-    updateSelectedModelTransformation: (transformation, newUniformScalingState) => dispatch(printingActions.updateSelectedModelTransformation(transformation, newUniformScalingState)),
+    updateSelectedModelTransformation: (transformation, newUniformScalingState) => {
+        return dispatch(printingActions.updateSelectedModelTransformation(transformation, newUniformScalingState));
+    },
     duplicateSelectedModel: () => dispatch(printingActions.duplicateSelectedModel()),
     layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
     resetSelectedModelTransformation: () => dispatch(printingActions.resetSelectedModelTransformation()),
