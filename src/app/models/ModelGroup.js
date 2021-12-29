@@ -304,7 +304,7 @@ class ModelGroup extends EventEmitter {
     // todo, remove mesh obj in 2d
     removeSelectedModel() {
         this._removeSelectedModels();
-        this.unselectAllModels();
+        this.unselectAllModels({ recursive: true });
         return this.getState();
     }
 
@@ -321,8 +321,8 @@ class ModelGroup extends EventEmitter {
      * Remove all models.
      */
     removeAllModels() {
+        this.unselectAllModels({ recursive: true });
         this._removeAllModels();
-        this.unselectAllModels();
 
         this.modelChanged();
         return this._getEmptyState();
