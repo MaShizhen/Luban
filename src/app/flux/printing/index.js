@@ -3,7 +3,7 @@ import { acceleratedRaycast, computeBoundsTree, disposeBoundsTree } from 'three-
 import path from 'path';
 import { cloneDeep, isNil, filter, find as lodashFind } from 'lodash';
 // import FileSaver from 'file-saver';
-import workerManager from '../../lib/manager/workerManager';
+import workerManager, { arrangeModels } from '../../lib/manager/workerManager';
 import {
     ABSENT_OBJECT,
     EPSILON,
@@ -1971,13 +1971,13 @@ export const actions = {
             models.push(modelInfo);
         });
 
-        workerManager.arrangeModels([{
+        arrangeModels({
             models,
             validArea: modelGroup.getValidArea(),
             angle,
             offset: offset / 2,
             padding
-        }], (payload) => {
+        }, (payload) => {
             const { status, value } = payload;
             switch (status) {
                 case 'succeed': {
@@ -2943,7 +2943,7 @@ export const actions = {
                             operation.state.currentSupport = mesh;
                             model.meshObject.add(mesh);
                             resolve();
-                        }, () => {}, (err) => {
+                        }, () => { }, (err) => {
                             reject(err);
                         });
                     } else {
