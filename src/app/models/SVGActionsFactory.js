@@ -137,6 +137,8 @@ function transformBox(x, y, w, h, m) {
 class SVGActionsFactory {
     selectedSvgModels = [];
 
+    drawModel = null;
+
     selectedElementsTransformation = {
         x: 0,
         y: 0,

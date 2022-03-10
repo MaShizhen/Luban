@@ -194,7 +194,7 @@ const INITIAL_STATE = {
     materialManagerDirection: LEFT_EXTRUDER,
 
     // others
-    transformMode: '', // translate/scale/rotate
+    transformMode: '', // translate/scale/rotate/draw
     isGcodeOverstepped: false,
     displayedType: 'model', // model/gcode
 
@@ -2943,7 +2943,7 @@ export const actions = {
                             operation.state.currentSupport = mesh;
                             model.meshObject.add(mesh);
                             resolve();
-                        }, () => {}, (err) => {
+                        }, () => { }, (err) => {
                             reject(err);
                         });
                     } else {

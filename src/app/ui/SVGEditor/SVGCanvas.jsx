@@ -111,7 +111,11 @@ class SVGCanvas extends PureComponent {
         updateTarget: PropTypes.func.isRequired,
         materials: PropTypes.object,
         editable: PropTypes.bool.isRequired,
-        hideLeftBarOverlay: PropTypes.func.isRequired
+        hideLeftBarOverlay: PropTypes.func.isRequired,
+
+        onDrawLine: PropTypes.func.isRequired,
+        onDrawDelete: PropTypes.func.isRequired,
+        onDrawTransform: PropTypes.func.isRequired,
     };
 
     updateTime = 0;
@@ -313,6 +317,18 @@ class SVGCanvas extends PureComponent {
             svgContent: this.svgContent,
             scale: this.scale
         });
+        this.svgContentGroup.onDrawLine = (line) => {
+            this.props.onDrawLine(line);
+        };
+        this.svgContentGroup.onDrawDelete = (lines) => {
+            this.props.onDrawDelete(lines);
+        };
+        this.svgContentGroup.onDrawTransform = ({ before, after }) => {
+            this.props.onDrawTransform({ before, after });
+        };
+        this.svgContentGroup.onChangeMode = (mode) => {
+            this.setMode(mode);
+        };
     }
 
     setupMouseEvents() {
@@ -350,12 +366,21 @@ class SVGCanvas extends PureComponent {
 
         if (this.mode === 'select') {
             jQuery(this.svgContainer).css('cursor', 'auto');
+        } else if (this.mode === 'draw') {
+            jQuery(this.svgContainer).css('cursor', 'pointer');
         } else {
             jQuery(this.svgContainer).css('cursor', 'crosshair');
         }
 
-        if (!includes(['select', 'panMove', 'textedit'], this.mode)) {
+        if (!includes(['select', 'panMove', 'textedit', 'draw'], this.mode)) {
             this.clearSelection();
+        }
+        if (this.mode === 'draw') {
+            this.clearSelection();
+
+            this.currentDrawing = Object.assign({}, CURRENTDRAWING_INIT);
+            this.currentDrawing.started = true;
+            this.svgContentGroup.drawGroup.startDraw();
         }
 
         this.trigger(SVG_EVENT_MODE, mode);
@@ -369,7 +394,6 @@ class SVGCanvas extends PureComponent {
 
     getMouseTarget = (event) => {
         let target = event.target;
-
         if (target === this.svgContainer) {
             return this.svgContainer;
         }
@@ -382,11 +406,14 @@ class SVGCanvas extends PureComponent {
         if (jQuery(target).closest('#selector-parent-group').length) {
             return this.svgContentGroup.selectorParentGroup;
         }
-
-        while (target && target.parentNode && target.parentNode !== this.svgContentGroup.group && target.parentNode.nodeName !== 'svg') {
-            target = target.parentNode;
+        if (this.mode === 'draw') {
+            return target;
+        } else {
+            while (target && target.parentNode && target.parentNode !== this.svgContentGroup.group && target.parentNode.nodeName !== 'svg') {
+                target = target.parentNode;
+            }
+            return target;
         }
-        return target;
     };
 
     onMouseDown = (event) => {
@@ -403,7 +430,6 @@ class SVGCanvas extends PureComponent {
         const x = pt.x;
         const y = pt.y;
         const mouseTarget = this.getMouseTarget(event);
-
         if (rightClick || event.ctrlKey || event.metaKey) {
             draw.mode = this.mode;
             this.setMode('panMove');
@@ -527,6 +553,14 @@ class SVGCanvas extends PureComponent {
                 const elements = this.svgContentGroup.selectedElements;
                 this.props.elementActions.rotateElementsStart(elements, { cx, cy });
 
+                break;
+            }
+            case 'draw': {
+                draw.started = true;
+                draw.startX = x;
+                draw.startY = y;
+
+                this.svgContentGroup.drawGroup.onMouseDown(mouseTarget, x, y);
                 break;
             }
             case 'panMove': {
@@ -828,6 +862,16 @@ class SVGCanvas extends PureComponent {
 
                 return;
             }
+
+            case 'draw': {
+                const dx = x - draw.startX;
+                const dy = y - draw.startY;
+                if (dx === 0 && dy === 0) {
+                    break;
+                }
+                this.svgContentGroup.drawGroup.onMouseMove(event, [x, y], [dx, dy]);
+                return;
+            }
             default:
                 break;
         }
@@ -989,7 +1033,9 @@ class SVGCanvas extends PureComponent {
         if (!draw.started) {
             return;
         }
-        draw.started = false;
+        if (this.mode !== 'draw') {
+            draw.started = false;
+        }
         let element = this.svgContentGroup.findSVGElement(this.svgContentGroup.getId());
         const matrix = this.svgContentGroup.getScreenCTM().inverse();
         const pt = transformPoint({ x: event.pageX, y: event.pageY }, matrix);
@@ -999,7 +1045,7 @@ class SVGCanvas extends PureComponent {
         // operations on selected elements
         switch (this.mode) {
             case 'select': {
-                element.remove();
+                element && element.remove();
                 return; // note this is not break
             }
 
@@ -1052,7 +1098,10 @@ class SVGCanvas extends PureComponent {
                 this.setMode(draw.mode);
                 return;
             }
-
+            case 'draw': {
+                this.svgContentGroup.drawGroup.onMouseUp(x, y);
+                return;
+            }
             default:
                 break;
         }
@@ -1165,6 +1214,15 @@ class SVGCanvas extends PureComponent {
             const pt = transformPoint({ x: evt.pageX, y: evt.pageY }, matrix);
             this.textActions.select(mouseTarget, pt.x, pt.y);
             this.setMode('textedit');
+        } else if (tagName === 'path' && mouseTarget.parentNode.tagName === 'g' && mouseTarget.parentNode.getAttribute('id').includes('graph')) {
+            // TODO 这个地方可能不会触发
+            // eslint-disable-next-line no-debugger
+            debugger;
+            this.setMode('draw');
+            this.svgContentGroup.drawGroup.startDraw(mouseTarget.parentNode);
+        } else if (tagName === 'g' && mouseTarget.getAttribute('id').includes('graph')) {
+            this.setMode('draw');
+            this.svgContentGroup.drawGroup.startDraw(mouseTarget);
         }
     };
 

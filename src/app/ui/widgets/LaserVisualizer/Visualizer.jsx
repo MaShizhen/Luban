@@ -311,6 +311,15 @@ class Visualizer extends Component {
             } else {
                 this.actions.onClickToUpload();
             }
+        },
+        onDrawLine: (line) => {
+            this.props.onDrawLine(line);
+        },
+        onDrawDelele: (lines) => {
+            this.props.onDrawDelele(lines);
+        },
+        onDrawTransform: ({ before, after }) => {
+            this.props.onDrawTransform(before, after);
         }
     };
 
@@ -746,6 +755,10 @@ const mapDispatchToProps = (dispatch) => {
         checkIsOversizeImage: (file, onFailure) => dispatch(editorActions.checkIsOversizeImage('laser', file, onFailure)),
         cutModel: (file, onFailure) => dispatch(editorActions.cutModel('laser', file, onFailure)),
         switchToPage: (page) => dispatch(editorActions.switchToPage('laser', page)),
+
+        onDrawLine: (line) => dispatch(editorActions.drawLine('laser', line)),
+        onDrawDelele: (lines) => dispatch(editorActions.drawDelele('laser', lines)),
+        onDrawTransform: (before, after) => dispatch(editorActions.drawTransform('laser', before, after)),
 
         elementActions: {
             moveElementsStart: (elements) => dispatch(editorActions.moveElementsStart('laser', elements)),

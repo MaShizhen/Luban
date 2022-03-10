@@ -207,6 +207,8 @@ class SVGEditor extends PureComponent {
         this.setMode('select');
     };
 
+
+
     hideLeftBarOverlay = () => {
         this.leftBarRef.current.actions.hideLeftBarOverlay();
     }
@@ -252,6 +254,9 @@ class SVGEditor extends PureComponent {
                                 getSelectedElementsUniformScalingState={this.props.getSelectedElementsUniformScalingState}
                                 elementActions={this.props.elementActions}
                                 hideLeftBarOverlay={this.hideLeftBarOverlay}
+                                onDrawLine={this.props.editorActions.onDrawLine}
+                                onDrawDelete={this.props.editorActions.onDrawDelele}
+                                onDrawTransform={this.props.editorActions.onDrawTransform}
                             />
                         </div>
                         <SVGLeftBar

@@ -47,6 +47,10 @@ import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import SvgModel from '../../models/SvgModel';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
 import { NS } from '../../ui/SVGEditor/lib/namespaces';
+import DrawDelete from '../operation-history/DrawDelete';
+import DrawLine from '../operation-history/DrawLine';
+import DrawTransform from '../operation-history/DrawTransform';
+import DrawComplete from '../operation-history/DrawComplete';
 
 const getSourceType = (fileName) => {
     let sourceType;
@@ -581,6 +585,7 @@ export const actions = {
      * @param modelID - optional, used in project recovery
      */
     generateModel: (headType, { originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex, isLimit }) => (dispatch, getState) => {
+        console.log('>> generateModel');
         const { size } = getState().machine;
         const { materials, modelGroup, SVGActions, contentGroup, toolPathGroup, coordinateMode, coordinateSize } = getState()[headType];
         sourceType = sourceType || getSourceType(originalName);
@@ -1300,8 +1305,8 @@ export const actions = {
     /**
      * Create model from element.
      */
-    createModelFromElement: (headType, element) => async (dispatch, getState) => {
-        const { SVGActions, toolPathGroup } = getState()[headType];
+    createModelFromElement: (headType, element, isDraw = false) => async (dispatch, getState) => {
+        const { SVGActions, toolPathGroup, contentGroup } = getState()[headType];
 
         const newSVGModel = await SVGActions.createModelFromElement(element);
         if (newSVGModel) {
@@ -1312,6 +1317,15 @@ export const actions = {
             });
             const operations = new Operations();
             operations.push(operation);
+
+            if (isDraw) {
+                operations.push(
+                    new DrawComplete({
+                        target: newSVGModel,
+                        drawGroup: contentGroup.drawGroup
+                    })
+                );
+            }
 
             dispatch(operationHistoryActions.setOperations(headType, operations));
         }
@@ -1379,7 +1393,10 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         SVGActions.clearSelection();
-
+        const newDrawEle = SVGActions.svgContentGroup.drawGroup.complete();
+        if (newDrawEle) {
+            dispatch(actions.createModelFromElement(headType, newDrawEle, true));
+        }
         dispatch(baseActions.render(headType));
     },
 
@@ -2079,6 +2096,51 @@ export const actions = {
     setShortcutStatus: (headType, enabled) => (dispatch) => {
         dispatch(actions.updateState(headType, {
             enableShortcut: enabled
+        }));
+    },
+
+    drawLine: (headType, line) => (dispatch, getState) => {
+        const { contentGroup, history } = getState()[headType];
+
+        const operations = new Operations();
+        const operation = new DrawLine({
+            target: line,
+            drawGroup: contentGroup.drawGroup
+        });
+        operations.push(operation);
+
+        history.push(operations);
+        dispatch(actions.updateState(headType, {
+            history
+        }));
+    },
+    drawDelele: (headType, lines) => (dispatch, getState) => {
+        const { contentGroup, history } = getState()[headType];
+
+        const operations = new Operations();
+        const operation = new DrawDelete({
+            target: lines,
+            drawGroup: contentGroup.drawGroup
+        });
+        operations.push(operation);
+        history.push(operations);
+        dispatch(actions.updateState(headType, {
+            history
+        }));
+    },
+    drawTransform: (headType, before, after) => (dispatch, getState) => {
+        const { contentGroup, history } = getState()[headType];
+
+        const operations = new Operations();
+        const operation = new DrawTransform({
+            before,
+            after,
+            drawGroup: contentGroup.drawGroup
+        });
+        operations.push(operation);
+        history.push(operations);
+        dispatch(actions.updateState(headType, {
+            history
         }));
     }
 };

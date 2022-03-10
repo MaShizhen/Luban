@@ -106,6 +106,21 @@ class SVGLeftBar extends PureComponent {
                             </div>
                             <div className="margin-vertical-4">
                                 <SvgIcon
+                                    color="#545659"
+                                    type={[`${mode === 'draw' ? 'hoverNoBackground' : 'hoverNormal'}`, 'pressSpecial']}
+                                    size={48}
+                                    name="ToolbarMirror"
+                                    disabled={!editable}
+                                    className={
+                                        classNames('background-transparent',
+                                            'padding-horizontal-4', 'position-re',
+                                            { [styles.selected]: (mode === 'draw') })
+                                    }
+                                    onClick={() => this.actions.setMode('draw')}
+                                />
+                            </div>
+                            <div className="margin-vertical-4">
+                                <SvgIcon
                                     type={[`${mode === 'rect' ? 'hoverNoBackground' : 'hoverNormal'}`, 'pressSpecial']}
                                     color="#545659"
                                     size={48}
@@ -143,7 +158,7 @@ class SVGLeftBar extends PureComponent {
                                     disabled={!editable}
                                     className={
                                         classNames('background-transparent',
-                                            'padding-horizontal-4', 'position-re',)
+                                            'padding-horizontal-4', 'position-re')
                                     }
                                     onClick={this.actions.onClickInsertText}
                                 />

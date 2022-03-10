@@ -3,6 +3,7 @@ import { createSVGElement, getBBox, toString } from '../element-utils';
 import { NS } from '../lib/namespaces';
 // import SelectorManager from './SelectorManager';
 import OperatorPoints from './OperatorPoints';
+import DrawGroup from './DrawGroup';
 import { getTransformList } from '../element-transform';
 import { recalculateDimensions } from '../element-recalculate';
 import SvgModel from '../../../models/SvgModel';
@@ -11,6 +12,8 @@ class SVGContentGroup {
     svgId = null;
 
     selectedElements = [];
+
+    drawGroup = null;
 
     constructor(options) {
         const { svgContent, scale } = options;
@@ -37,6 +40,21 @@ class SVGContentGroup {
             scale: this.scale
         });
         this.operatorPoints.showOperator(true);
+
+        this.drawGroup = new DrawGroup(this.group);
+
+        this.drawGroup.onDrawLine = (line) => {
+            this.onDrawLine(line);
+        };
+        this.drawGroup.onDrawDelete = (lines) => {
+            this.onDrawDelete(lines);
+        };
+        this.drawGroup.onDrawTransform = ({ before, after }) => {
+            this.onDrawTransform({ before, after });
+        };
+        this.drawGroup.onDrawComplete = () => {
+            this.onChangeMode('select');
+        };
     }
 
     // construct filter used in toolPath

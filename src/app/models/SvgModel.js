@@ -735,6 +735,7 @@ class SvgModel extends BaseModel {
                 element.setAttribute('height', imageHeight);
                 break;
             }
+            case 'g':
             case 'rect': {
                 element.setAttribute('x', x - width * absScaleX / 2);
                 element.setAttribute('y', y - height * absScaleY / 2);
