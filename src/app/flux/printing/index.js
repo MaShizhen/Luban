@@ -1434,6 +1434,11 @@ export const actions = {
         const renderGcodeFileName = `${currentModelName}_${new Date().getTime()}`;
         // Prepare definition file
         await dispatch(actions.updateActiveDefinitionMachineSize(size));
+
+        activeDefinition.settings.machine_heated_bed.default_value = extruderLDefinition.settings.machine_heated_bed.default_value;
+        activeDefinition.settings.material_bed_temperature.default_value = extruderLDefinition.settings.material_bed_temperature.default_value;
+        activeDefinition.settings.material_bed_temperature_layer_0.default_value = extruderLDefinition.settings.material_bed_temperature_layer_0.default_value;
+
         const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition, true);
         const adhesionExtruder = helpersExtruderConfig.adhesion;
         const supportExtruder = helpersExtruderConfig.support;
@@ -1444,10 +1449,6 @@ export const actions = {
         finalDefinition.settings.support_interface_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_roof_extruder_nr.default_value = supportExtruder;
         finalDefinition.settings.support_bottom_extruder_nr.default_value = supportExtruder;
-
-        finalDefinition.settings.machine_heated_bed.default_value = extruderLDefinition.settings.machine_heated_bed.default_value;
-        finalDefinition.settings.material_bed_temperature.default_value = extruderLDefinition.settings.material_bed_temperature.default_value;
-        finalDefinition.settings.material_bed_temperature_layer_0.default_value = extruderLDefinition.settings.material_bed_temperature_layer_0.default_value;
 
         await api.profileDefinitions.createDefinition(CONFIG_HEADTYPE, finalDefinition);
 
@@ -1927,6 +1928,7 @@ export const actions = {
 
         dispatch(actions.unselectAllModels());
         const { modelGroup, progressStatesManager } = getState().printing;
+        const { size } = getState().machine;
 
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_ARRANGE_MODELS);
         dispatch(actions.updateState({
@@ -1971,12 +1973,13 @@ export const actions = {
             models.push(modelInfo);
         });
 
-        workerManager.arrangeModels([{
+        const res = workerManager.arrangeModels([{
             models,
             validArea: modelGroup.getValidArea(),
             angle,
             offset: offset / 2,
-            padding
+            padding,
+            memory: performance.memory.jsHeapSizeLimit
         }], (payload) => {
             const { status, value } = payload;
             switch (status) {
@@ -2001,9 +2004,10 @@ export const actions = {
                             modelGroup.selectModelById(part.modelID, true);
                         }
                     });
+                    const validArea = modelGroup.getValidArea();
                     modelGroup.updateSelectedGroupTransformation({
-                        positionX: 0, // TODO bounding box center
-                        positionY: 0
+                        positionX: (validArea.max.x + validArea.min.x) / 2,
+                        positionY: (validArea.max.y + validArea.min.y) / 2
                     });
 
                     parts.forEach((part) => {
@@ -2019,7 +2023,7 @@ export const actions = {
                     parts.forEach((part) => {
                         const model = modelGroup.getModel(part.modelID);
                         if (part.angle === undefined || part.position === undefined) {
-                            const position = modelGroup.arrangeOutsidePlate(model);
+                            const position = modelGroup.arrangeOutsidePlate(model, size);
                             model.updateTransformation({
                                 positionX: position.x,
                                 positionY: position.y
@@ -2056,6 +2060,7 @@ export const actions = {
                             showArrangeModelsError: true
                         }));
                     }
+                    res.terminate();
                     break;
                 }
                 case 'progress': {
@@ -2080,6 +2085,7 @@ export const actions = {
                     dispatch(appGlobalActions.updateShowArrangeModelsError({
                         showArrangeModelsError: true
                     }));
+                    res.terminate();
                     break;
                 }
                 default:

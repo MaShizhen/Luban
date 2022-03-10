@@ -256,7 +256,9 @@ class ModelGroup extends EventEmitter {
 
     removeModel(model, loop = false) {
         if (model.type === 'primeTower') return;
-        model.sourceType === '3d' && model.setSelected(false);
+        if (!(model instanceof SvgModel)) {
+            model.setSelected(false);
+        }
         if (model instanceof ThreeGroup) {
             model.children.forEach((child) => {
                 this.removeModel(child, true);
@@ -1363,10 +1365,10 @@ class ModelGroup extends EventEmitter {
         this.object.visible = true;
     }
 
-    arrangeOutsidePlate(model) {
+    arrangeOutsidePlate(model, size) {
         model.computeBoundingBox();
-        const x = this._bbox.max.x + (model.boundingBox.max.x - model.boundingBox.min.x) / 2;
-        let y = this._bbox.min.y;
+        const x = size.x / 2 + (model.boundingBox.max.x - model.boundingBox.min.x) / 2;
+        let y = -size.y / 2;
         const stepCount = 1;
 
         const modelBox3Clone = model.boundingBox.clone();
