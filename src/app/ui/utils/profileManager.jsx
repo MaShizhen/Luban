@@ -1,11 +1,13 @@
 import React from 'react';
+import { KEY_DEFAULT_CATEGORY_CUSTOM } from '../../constants';
+import i18n from '../../lib/i18n';
 import { MaterialWithColor } from '../widgets/PrintingMaterial/MaterialWithColor';
 
 function getSelectOptions(printingDefinitions) {
     const toolDefinitionOptionsObj = {};
     const toolDefinitionOptions = [];
     printingDefinitions.forEach(tool => {
-        const category = tool.category;
+        const category = tool.category || i18n._(KEY_DEFAULT_CATEGORY_CUSTOM);
         const definitionId = tool.definitionId;
         if (Object.keys(tool?.settings).length > 0) {
             const checkboxAndSelectGroup = {};
@@ -37,7 +39,7 @@ function getMaterialSelectOptions(materialDefinitions) {
     const materialDefinitionOptionsObj = {};
     const materialDefinitionOptions = [];
     materialDefinitions.forEach(tool => {
-        const category = tool.category;
+        const category = tool.category || i18n._(KEY_DEFAULT_CATEGORY_CUSTOM);
         const definitionId = tool.definitionId;
         if (Object.keys(tool?.settings).length > 0) {
             const checkboxAndSelectGroup = {};

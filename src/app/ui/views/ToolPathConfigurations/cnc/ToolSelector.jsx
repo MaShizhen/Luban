@@ -8,6 +8,7 @@ import styles from '../styles.styl';
 // import { actions as cncActions } from '../../../../flux/cnc';
 import CncToolManager from '../../CncToolManager';
 import SvgIcon from '../../../components/SvgIcon';
+import { KEY_DEFAULT_CATEGORY_CUSTOM } from '../../../../constants';
 
 function ToolSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentValueAsProfile, toolDefinition, isModifiedDefinition = false, shouldSaveToolpath = false, saveToolPath }) {
     const [showManager, setShowManager] = useState(false);
@@ -52,7 +53,7 @@ function ToolSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentVal
     }
 
     toolDefinitions.forEach(tool => {
-        const category = tool.category;
+        const category = tool.category || i18n._(KEY_DEFAULT_CATEGORY_CUSTOM);
         const definitionId = tool.definitionId;
         if (Object.keys(tool?.settings).length > 0) {
             const checkboxAndSelectGroup = {};

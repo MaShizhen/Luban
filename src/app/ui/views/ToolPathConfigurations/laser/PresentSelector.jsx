@@ -8,6 +8,7 @@ import styles from '../styles.styl';
 // import { actions as cncActions } from '../../../../flux/cnc';
 import LaserPresentManager from '../../LaserPresentManager';
 import SvgIcon from '../../../components/SvgIcon';
+import { KEY_DEFAULT_CATEGORY_CUSTOM } from '../../../../constants';
 
 function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentValueAsProfile, toolDefinition, isModifiedDefinition = false, shouldSaveToolpath = false, saveToolPath }) {
     const [showManager, setShowManager] = useState(false);
@@ -52,7 +53,7 @@ function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrent
     }
 
     toolDefinitions.forEach(tool => {
-        const category = tool.category;
+        const category = tool.category || i18n._(KEY_DEFAULT_CATEGORY_CUSTOM);
         const definitionId = tool.definitionId;
 
         if (Object.keys(tool?.settings).length > 0) {
