@@ -291,6 +291,18 @@ class Visualizer extends Component {
             } else {
                 this.actions.onClickToUpload();
             }
+        },
+        onDrawLine: (line) => {
+            this.props.onDrawLine(line);
+        },
+        onDrawDelele: (lines) => {
+            this.props.onDrawDelele(lines);
+        },
+        onDrawTransform: ({ before, after }) => {
+            this.props.onDrawTransform(before, after);
+        },
+        onDrawTransformComplete: ({ before, after }) => {
+            this.props.onDrawTransformComplete(before, after);
         }
     };
 
@@ -735,6 +747,12 @@ const mapDispatchToProps = (dispatch) => {
         uploadImage: (file, mode, onFailure, isLimit) => dispatch(editorActions.uploadImage('cnc', file, mode, onFailure, isLimit)),
         switchToPage: (page) => dispatch(editorActions.switchToPage('cnc', page)),
         checkIsOversizeImage: (file, onFailure) => dispatch(editorActions.checkIsOversizeImage('cnc', file, onFailure)),
+
+        onDrawLine: (line) => dispatch(editorActions.drawLine('cnc', line)),
+        onDrawDelele: (lines) => dispatch(editorActions.drawDelele('cnc', lines)),
+        onDrawTransform: (before, after) => dispatch(editorActions.drawTransform('cnc', before, after)),
+        onDrawTransformComplete: (before, after) => dispatch(editorActions.drawTransformComplete('cnc', before, after)),
+
         elementActions: {
             moveElementsStart: (elements, options) => dispatch(editorActions.moveElementsStart('cnc', elements, options)),
             moveElements: (elements, options) => dispatch(editorActions.moveElements('cnc', elements, options)),
