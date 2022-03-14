@@ -1215,14 +1215,11 @@ class SVGCanvas extends PureComponent {
             this.textActions.select(mouseTarget, pt.x, pt.y);
             this.setMode('textedit');
         } else if (tagName === 'path' && mouseTarget.parentNode.tagName === 'g' && mouseTarget.parentNode.getAttribute('id').includes('graph')) {
-            // TODO 这个地方可能不会触发
-            // eslint-disable-next-line no-debugger
-            debugger;
-            this.setMode('draw');
             this.svgContentGroup.drawGroup.startDraw(mouseTarget.parentNode);
-        } else if (tagName === 'g' && mouseTarget.getAttribute('id').includes('graph')) {
             this.setMode('draw');
+        } else if (tagName === 'g' && mouseTarget.getAttribute('id').includes('graph')) {
             this.svgContentGroup.drawGroup.startDraw(mouseTarget);
+            this.setMode('draw');
         }
     };
 

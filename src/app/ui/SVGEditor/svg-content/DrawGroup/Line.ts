@@ -7,7 +7,7 @@ class Line {
 
     public EndPoins: Point[]
 
-    public EndPointsEle: SVGCircleElement[] = []
+    public EndPointsEle: SVGRectElement[] = []
 
     public ele: SVGPathElement
 
@@ -51,8 +51,8 @@ class Line {
             ] : this.EndPoins;
 
             EndPoins.forEach((item, index) => {
-                this.EndPointsEle[index].setAttribute('cx', item[0].toString());
-                this.EndPointsEle[index].setAttribute('cy', item[1].toString());
+                this.EndPointsEle[index].setAttribute('x', (item[0] - 2).toString());
+                this.EndPointsEle[index].setAttribute('y', (item[1] - 2).toString());
             });
         } else {
             const points = this.parsePoints();
@@ -66,16 +66,20 @@ class Line {
 
     public generateEndPointEle() {
         this.EndPoins.forEach((item) => {
-            const circle = Array.from(document.querySelectorAll<SVGCircleElement>('circle')).find(ele => {
-                return ele.getAttribute('cx') === item[0].toString() && ele.getAttribute('cy') === item[1].toString();
+            const circle = Array.from(document.querySelectorAll<SVGRectElement>('rect[type="end-point"]')).find(ele => {
+                return ele.getAttribute('x') === (item[0] - 2).toString() && ele.getAttribute('y') === (item[1] - 2).toString();
             }) || createSVGElement({
-                element: 'circle',
+                element: 'rect',
                 attr: {
+                    type: 'end-point',
                     fill: '',
                     'fill-opacity': 1,
-                    r: 2,
-                    cx: item[0],
-                    cy: item[1],
+                    rx: '2',
+                    ry: '2',
+                    width: 4,
+                    height: 4,
+                    x: item[0] - 2,
+                    y: item[1] - 2,
                     stroke: ThemeColor,
                     'pointer-events': 'all'
                 }

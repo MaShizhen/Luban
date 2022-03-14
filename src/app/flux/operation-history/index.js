@@ -2,6 +2,8 @@ import { baseActions as editorBaseActions } from '../editor/actions-base';
 import { baseActions as printingBaseActions } from '../printing/actions-base';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
+import DrawDelete from './DrawDelete';
+import DrawLine from './DrawLine';
 
 const updateState = (headType, state) => {
     if (headType === 'printing') {
@@ -37,6 +39,17 @@ export const actions = {
             }));
         }
         dispatch(projectActions.autoSaveEnvironment(headType));
+    },
+    clearDrawOperations: (headType) => (dispatch, getState) => {
+        const { history } = getState()[headType];
+        history.history = history.history.filter((item) => {
+            return !item.operations.some(operation => {
+                return operation instanceof DrawLine || operation instanceof DrawDelete;
+            });
+        });
+        dispatch(updateState(headType, {
+            history
+        }));
     },
     clear: (headType) => (dispatch, getState) => {
         const history = getState()[headType]?.history;

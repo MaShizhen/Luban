@@ -23,7 +23,7 @@ export default class DrawTransform extends Operation<DrawTransformProp> {
             record.line.updatePosition(record.points);
             record.line.updatePosition();
         });
-        this.state.drawGroup.clearOperations();
+        // this.state.drawGroup.clearOperations();
     }
 
     public undo() {
@@ -31,6 +31,6 @@ export default class DrawTransform extends Operation<DrawTransformProp> {
             record.line.updatePosition(record.points);
             record.line.updatePosition();
         });
-        this.state.drawGroup.clearOperations();
+        // this.state.drawGroup.clearOperations();
     }
 }

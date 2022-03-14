@@ -1,17 +1,23 @@
 export type Point = [number, number]
 
 export class EndPoint {
-    public point: Point
+    public x: number
 
-    constructor(point: Point) {
-        this.point = point;
+    public y: number
+
+    constructor(x: number, y: number) {
+        this.x = x;
+        this.y = y;
     }
 }
 
 export class ControlPoint {
-    public point: Point
+    public x: number
 
-    constructor(point: Point) {
-        this.point = point;
+    public y: number
+
+    constructor(x: number, y: number) {
+        this.x = x;
+        this.y = y;
     }
 }

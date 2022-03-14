@@ -27,8 +27,13 @@ class SVGContentGroup {
         this.group = document.createElementNS(NS.SVG, 'g');
         this.group.setAttribute('id', 'svg-data');
 
+        const svgDrawGroup = document.createElementNS(NS.SVG, 'g');
+        svgDrawGroup.setAttribute('id', 'svg-draw-group');
+
+
         this.svgContent.append(this.backgroundGroup);
         this.svgContent.append(this.group);
+        this.svgContent.append(svgDrawGroup);
 
         this.initFilter();
         // this.selectorManager = new SelectorManager({

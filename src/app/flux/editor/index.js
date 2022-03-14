@@ -50,7 +50,6 @@ import { NS } from '../../ui/SVGEditor/lib/namespaces';
 import DrawDelete from '../operation-history/DrawDelete';
 import DrawLine from '../operation-history/DrawLine';
 import DrawTransform from '../operation-history/DrawTransform';
-import DrawComplete from '../operation-history/DrawComplete';
 
 const getSourceType = (fileName) => {
     let sourceType;
@@ -1306,7 +1305,7 @@ export const actions = {
      * Create model from element.
      */
     createModelFromElement: (headType, element, isDraw = false) => async (dispatch, getState) => {
-        const { SVGActions, toolPathGroup, contentGroup } = getState()[headType];
+        const { SVGActions, toolPathGroup } = getState()[headType];
 
         const newSVGModel = await SVGActions.createModelFromElement(element);
         if (newSVGModel) {
@@ -1319,12 +1318,7 @@ export const actions = {
             operations.push(operation);
 
             if (isDraw) {
-                operations.push(
-                    new DrawComplete({
-                        target: newSVGModel,
-                        drawGroup: contentGroup.drawGroup
-                    })
-                );
+                dispatch(operationHistoryActions.clearDrawOperations(headType));
             }
 
             dispatch(operationHistoryActions.setOperations(headType, operations));
