@@ -44,6 +44,8 @@ class DrawGroup {
 
     public onDrawComplete
 
+    public onDrawTransformComplete: (records: { before: TransformRecord[], after: TransformRecord[] }) => void;
+
     private selected = {} as {
         line: Line,
         point?: SVGRectElement,
@@ -55,6 +57,9 @@ class DrawGroup {
     private beforeTransform: TransformRecord[] = []
 
     private afterTransform: TransformRecord[] = []
+
+    private beforeGraphTransform: TransformRecord[] = []
+
 
     constructor(contentGroup) {
         this.contentGroup = contentGroup;
@@ -200,6 +205,15 @@ class DrawGroup {
     private setMode(mode: Mode) {
         this.mode = mode;
 
+        if (mode === Mode.SELECT) {
+            this.beforeGraphTransform = this.drawedLine.map(line => {
+                return {
+                    line,
+                    points: cloneDeep(line.points)
+                };
+            });
+        }
+
         this.updateAttachPoint();
         this.unSelectAllEndPoint();
 
@@ -231,6 +245,18 @@ class DrawGroup {
 
         this.graph.lastElementChild && this.operationGroup.updateOperation(this.graph.lastElementChild as SVGPathElement);
         this.toogleVisible(true);
+    }
+
+    public resetOperationByselect() {
+        this.resetOperation(this.selected.line);
+    }
+
+    public resetOperation(line?: Line) {
+        this.operationGroup.clearOperation();
+        if (!line) {
+            line = this.drawedLine[this.drawedLine.length - 1];
+        }
+        line && this.operationGroup.updateOperation(line.ele);
     }
 
     public startSelect(svg: SVGGElement) {
@@ -645,24 +671,37 @@ class DrawGroup {
         }
     }
 
-    public complete() {
-        if (this.mode === Mode.NONE) {
+    public drawComplete() {
+        if (this.mode !== Mode.DRAW) {
             return null;
         }
 
         this.toogleVisible(false);
-        if (this.mode === Mode.DRAW) {
-            this.setMode(Mode.NONE);
-            if (this.onDrawComplete) {
-                this.onDrawComplete(this.graph);
-            }
-            return this.graph;
+        this.setMode(Mode.NONE);
+        if (this.onDrawComplete) {
+            this.onDrawComplete(this.graph);
         }
-        if (this.mode === Mode.SELECT) {
-            this.setMode(Mode.NONE);
+        return this.graph;
+    }
+
+    public transformComplete() {
+        if (this.mode !== Mode.SELECT) {
+            return;
         }
 
-        return null;
+        this.toogleVisible(false);
+        if (this.onDrawTransformComplete) {
+            this.onDrawTransformComplete({
+                before: this.beforeGraphTransform,
+                after: this.drawedLine.map(line => {
+                    return {
+                        line,
+                        points: cloneDeep(line.points)
+                    };
+                })
+            });
+        }
+        this.setMode(Mode.NONE);
     }
 }
 

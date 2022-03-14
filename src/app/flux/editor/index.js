@@ -50,6 +50,7 @@ import { NS } from '../../ui/SVGEditor/lib/namespaces';
 import DrawDelete from '../operation-history/DrawDelete';
 import DrawLine from '../operation-history/DrawLine';
 import DrawTransform from '../operation-history/DrawTransform';
+import DrawTransformComplete from '../operation-history/DrawTransformComplete';
 
 const getSourceType = (fileName) => {
     let sourceType;
@@ -1387,9 +1388,14 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         SVGActions.clearSelection();
-        const newDrawEle = SVGActions.svgContentGroup.drawGroup.complete();
-        if (newDrawEle) {
-            dispatch(actions.createModelFromElement(headType, newDrawEle, true));
+        if (SVGActions.svgContentGroup.drawGroup.mode === 1) {
+            const newDrawEle = SVGActions.svgContentGroup.drawGroup.drawComplete();
+            if (newDrawEle) {
+                dispatch(actions.createModelFromElement(headType, newDrawEle, true));
+            }
+        } else if (SVGActions.svgContentGroup.drawGroup.mode === 2) {
+            SVGActions.svgContentGroup.drawGroup.transformComplete();
+            dispatch(operationHistoryActions.clearDrawOperations(headType));
         }
         dispatch(baseActions.render(headType));
     },
@@ -2133,6 +2139,23 @@ export const actions = {
         });
         operations.push(operation);
         history.push(operations);
+        dispatch(actions.updateState(headType, {
+            history
+        }));
+    },
+    drawTransformComplete: (headType, before, after) => (dispatch, getState) => {
+        const { contentGroup, history } = getState()[headType];
+
+        const operations = new Operations();
+        const operation = new DrawTransformComplete({
+            before,
+            after,
+            drawGroup: contentGroup.drawGroup
+        });
+        operations.push(operation);
+        history.push(operations);
+
+        dispatch(operationHistoryActions.clearDrawOperations(headType));
         dispatch(actions.updateState(headType, {
             history
         }));

@@ -4,6 +4,7 @@ import { baseActions as printingBaseActions } from '../printing/actions-base';
 import { actions as projectActions } from '../project';
 import DrawDelete from './DrawDelete';
 import DrawLine from './DrawLine';
+import DrawTransform from './DrawTransform';
 
 const updateState = (headType, state) => {
     if (headType === 'printing') {
@@ -44,9 +45,10 @@ export const actions = {
         const { history } = getState()[headType];
         history.history = history.history.filter((item) => {
             return !item.operations.some(operation => {
-                return operation instanceof DrawLine || operation instanceof DrawDelete;
+                return operation instanceof DrawLine || operation instanceof DrawDelete || operation instanceof DrawTransform;
             });
         });
+        history.index = history.history.length - 1;
         dispatch(updateState(headType, {
             history
         }));

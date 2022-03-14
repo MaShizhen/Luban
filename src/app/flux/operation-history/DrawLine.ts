@@ -17,11 +17,11 @@ export default class DrawLine extends Operation<DrawLineProp> {
 
     public redo() {
         this.state.drawGroup.appendLine(this.state.target);
-        // this.state.drawGroup.setOperations();
+        this.state.drawGroup.resetOperation();
     }
 
     public undo() {
         this.state.drawGroup.deleteLine([this.state.target]);
-        // this.state.drawGroup.setOperations();
+        this.state.drawGroup.resetOperation();
     }
 }

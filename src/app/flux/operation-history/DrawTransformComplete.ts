@@ -1,15 +1,15 @@
 import type DrawGroup from '../../ui/SVGEditor/svg-content/DrawGroup';
-import { TransformRecord } from '../../ui/SVGEditor/svg-content/DrawGroup/DrawGroup';
 import Operation from './Operation';
+import { TransformRecord } from '../../ui/SVGEditor/svg-content/DrawGroup/DrawGroup';
 
-type DrawTransformProp = {
+type DrawTransformCompleteProp = {
     before: TransformRecord[],
     after: TransformRecord[],
     drawGroup: DrawGroup
 }
 
-export default class DrawTransform extends Operation<DrawTransformProp> {
-    constructor(props: DrawTransformProp) {
+export default class DrawTransformComplete extends Operation<DrawTransformCompleteProp> {
+    constructor(props: DrawTransformCompleteProp) {
         super();
         this.state = {
             before: props.before,
@@ -23,7 +23,6 @@ export default class DrawTransform extends Operation<DrawTransformProp> {
             record.line.updatePosition(record.points);
             record.line.updatePosition();
         });
-        this.state.drawGroup.resetOperationByselect();
     }
 
     public undo() {
@@ -31,6 +30,5 @@ export default class DrawTransform extends Operation<DrawTransformProp> {
             record.line.updatePosition(record.points);
             record.line.updatePosition();
         });
-        this.state.drawGroup.resetOperationByselect();
     }
 }

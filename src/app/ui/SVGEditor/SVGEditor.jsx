@@ -257,6 +257,7 @@ class SVGEditor extends PureComponent {
                                 onDrawLine={this.props.editorActions.onDrawLine}
                                 onDrawDelete={this.props.editorActions.onDrawDelele}
                                 onDrawTransform={this.props.editorActions.onDrawTransform}
+                                onDrawTransformComplete={this.props.editorActions.onDrawTransformComplete}
                             />
                         </div>
                         <SVGLeftBar

@@ -116,6 +116,7 @@ class SVGCanvas extends PureComponent {
         onDrawLine: PropTypes.func.isRequired,
         onDrawDelete: PropTypes.func.isRequired,
         onDrawTransform: PropTypes.func.isRequired,
+        onDrawTransformComplete: PropTypes.func.isRequired
     };
 
     updateTime = 0;
@@ -326,6 +327,9 @@ class SVGCanvas extends PureComponent {
         this.svgContentGroup.onDrawTransform = ({ before, after }) => {
             this.props.onDrawTransform({ before, after });
         };
+        this.svgContentGroup.onDrawTransformComplete = ({ before, after }) => {
+            this.props.onDrawTransformComplete({ before, after });
+        };
         this.svgContentGroup.onChangeMode = (mode) => {
             this.setMode(mode);
         };
@@ -376,8 +380,9 @@ class SVGCanvas extends PureComponent {
             this.clearSelection();
         }
         if (this.mode === 'draw') {
-            this.clearSelection();
-
+            if (this.svgContentGroup.drawGroup.mode === 0) {
+                this.clearSelection();
+            }
             this.currentDrawing = Object.assign({}, CURRENTDRAWING_INIT);
             this.currentDrawing.started = true;
             this.svgContentGroup.drawGroup.startDraw();
@@ -1215,9 +1220,11 @@ class SVGCanvas extends PureComponent {
             this.textActions.select(mouseTarget, pt.x, pt.y);
             this.setMode('textedit');
         } else if (tagName === 'path' && mouseTarget.parentNode.tagName === 'g' && mouseTarget.parentNode.getAttribute('id').includes('graph')) {
+            this.clearSelection();
             this.svgContentGroup.drawGroup.startDraw(mouseTarget.parentNode);
             this.setMode('draw');
         } else if (tagName === 'g' && mouseTarget.getAttribute('id').includes('graph')) {
+            this.clearSelection();
             this.svgContentGroup.drawGroup.startDraw(mouseTarget);
             this.setMode('draw');
         }

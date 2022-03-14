@@ -57,6 +57,9 @@ class SVGContentGroup {
         this.drawGroup.onDrawTransform = ({ before, after }) => {
             this.onDrawTransform({ before, after });
         };
+        this.drawGroup.onDrawTransformComplete = ({ before, after }) => {
+            this.onDrawTransformComplete({ before, after });
+        };
         this.drawGroup.onDrawComplete = () => {
             this.onChangeMode('select');
         };
