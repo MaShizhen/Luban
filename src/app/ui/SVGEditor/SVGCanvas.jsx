@@ -327,8 +327,8 @@ class SVGCanvas extends PureComponent {
         this.svgContentGroup.onDrawTransform = ({ before, after }) => {
             this.props.onDrawTransform({ before, after });
         };
-        this.svgContentGroup.onDrawTransformComplete = ({ before, after }) => {
-            this.props.onDrawTransformComplete({ before, after });
+        this.svgContentGroup.onDrawTransformComplete = ({ target, before, after }) => {
+            this.props.onDrawTransformComplete({ target, before, after });
         };
         this.svgContentGroup.onChangeMode = (mode) => {
             this.setMode(mode);
@@ -1219,11 +1219,7 @@ class SVGCanvas extends PureComponent {
             const pt = transformPoint({ x: evt.pageX, y: evt.pageY }, matrix);
             this.textActions.select(mouseTarget, pt.x, pt.y);
             this.setMode('textedit');
-        } else if (tagName === 'path' && mouseTarget.parentNode.tagName === 'g' && mouseTarget.parentNode.getAttribute('id').includes('graph')) {
-            this.clearSelection();
-            this.svgContentGroup.drawGroup.startDraw(mouseTarget.parentNode);
-            this.setMode('draw');
-        } else if (tagName === 'g' && mouseTarget.getAttribute('id').includes('graph')) {
+        } else if (tagName === 'path' && mouseTarget.getAttribute('id').includes('graph')) {
             this.clearSelection();
             this.svgContentGroup.drawGroup.startDraw(mouseTarget);
             this.setMode('draw');

@@ -475,6 +475,10 @@ class SvgModel extends BaseModel {
             //     numberAttrs.push('x1', 'y1', 'x2', 'y2');
             //     break;
             case 'path': {
+                const isDraw = elem.getAttribute('id').includes('graph');
+                if (isDraw) {
+                    break;
+                }
                 const imageElement = document.createElementNS(NS.SVG, 'image');
                 const absWidth = Math.abs(width), absHeight = Math.abs(height);
                 const attributes = {
@@ -735,7 +739,18 @@ class SvgModel extends BaseModel {
                 element.setAttribute('height', imageHeight);
                 break;
             }
-            case 'g':
+            case 'path': {
+                const originX = element.getAttribute('x');
+                const originY = element.getAttribute('y');
+                const d = element.getAttribute('source');
+                const newPath = d.replace(/\d+\.*\d*\s+\d+\.*\d*/g, (coordinateString) => {
+                    const [currentX, currentY] = coordinateString.split(' ');
+                    return [Number(currentX) + x - Number(originX), Number(currentY) + y - Number(originY)].join(' ');
+                });
+                element.setAttribute('d', newPath);
+                break;
+            }
+
             case 'rect': {
                 element.setAttribute('x', x - width * absScaleX / 2);
                 element.setAttribute('y', y - height * absScaleY / 2);

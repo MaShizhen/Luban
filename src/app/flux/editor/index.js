@@ -2143,11 +2143,12 @@ export const actions = {
             history
         }));
     },
-    drawTransformComplete: (headType, before, after) => (dispatch, getState) => {
+    drawTransformComplete: (headType, target, before, after) => (dispatch, getState) => {
         const { contentGroup, history } = getState()[headType];
 
         const operations = new Operations();
         const operation = new DrawTransformComplete({
+            target,
             before,
             after,
             drawGroup: contentGroup.drawGroup

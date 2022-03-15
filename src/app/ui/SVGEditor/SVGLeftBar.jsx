@@ -6,6 +6,7 @@ import SvgIcon from '../components/SvgIcon';
 import styles from './index.styl';
 import { library } from './lib/ext-shapes';
 import i18n from '../../lib/i18n';
+// import Anchor from '../components/Anchor';
 
 class SVGLeftBar extends PureComponent {
     static propTypes = {
@@ -22,7 +23,8 @@ class SVGLeftBar extends PureComponent {
 
     state = {
         showExtShape: false,
-        extShape: null
+        extShape: null,
+        showDrawDone: false
     };
 
     actions = {
@@ -33,7 +35,8 @@ class SVGLeftBar extends PureComponent {
         setMode: (mode, ext) => {
             this.setState({
                 showExtShape: false,
-                extShape: ext ?? this.state.extShape
+                extShape: ext ?? this.state.extShape,
+                showDrawDone: mode === 'draw'
             });
             this.props.setMode(mode, ext);
         },
@@ -50,6 +53,11 @@ class SVGLeftBar extends PureComponent {
         hideLeftBarOverlay: () => {
             this.setState({
                 showExtShape: false
+            });
+        },
+        draw: () => {
+            this.setState({
+                showDrawDone: false
             });
         }
     };
@@ -180,6 +188,33 @@ class SVGLeftBar extends PureComponent {
                             </div>
                         </div>
                     </div>
+                    {
+                        this.state.showDrawDone && mode === 'draw' && (
+                            <></>
+                            // <div
+                            //     className="position-ab width-272 margin-left-72 margin-top-112 border-default-grey-1 border-radius-8 background-color-white"
+                            // >
+                            //     <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                            //         Pen
+                            //     </div>
+                            //     <div>
+                            //         <div className="sm-flex">
+                            //             <Anchor
+                            //                 onClick={() => {
+                            //                     this.actions.draw();
+                            //                 }}
+                            //             >
+                            //                 <div
+                            //                     className={classNames(styles['center-ext'])}
+                            //                 >
+                            //                     <div>done</div>
+                            //                 </div>
+                            //             </Anchor>
+                            //         </div>
+                            //     </div>
+                            // </div>
+                        )
+                    }
                     {showExtShape && mode === 'ext' && (
                         <div
                             className="position-ab width-272 margin-left-72 margin-top-268 border-default-grey-1 border-radius-8 background-color-white"

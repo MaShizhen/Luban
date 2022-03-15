@@ -30,7 +30,9 @@ class DrawGroup {
 
     private drawedLine: Line[] = []
 
-    private graph: SVGGElement
+    private graph: SVGPathElement
+
+    private originGraph: SVGPathElement
 
     private guideX: SVGLineElement
 
@@ -44,7 +46,7 @@ class DrawGroup {
 
     public onDrawComplete
 
-    public onDrawTransformComplete: (records: { before: TransformRecord[], after: TransformRecord[] }) => void;
+    public onDrawTransformComplete: (records: { target: SVGPathElement, before: string, after: string }) => void;
 
     private selected = {} as {
         line: Line,
@@ -57,9 +59,6 @@ class DrawGroup {
     private beforeTransform: TransformRecord[] = []
 
     private afterTransform: TransformRecord[] = []
-
-    private beforeGraphTransform: TransformRecord[] = []
-
 
     constructor(contentGroup) {
         this.contentGroup = contentGroup;
@@ -205,14 +204,14 @@ class DrawGroup {
     private setMode(mode: Mode) {
         this.mode = mode;
 
-        if (mode === Mode.SELECT) {
-            this.beforeGraphTransform = this.drawedLine.map(line => {
-                return {
-                    line,
-                    points: cloneDeep(line.points)
-                };
-            });
-        }
+        // if (mode === Mode.SELECT) {
+        //     this.beforeGraphTransform = this.drawedLine.map(line => {
+        //         return {
+        //             line,
+        //             points: cloneDeep(line.points)
+        //         };
+        //     });
+        // }
 
         this.updateAttachPoint();
         this.unSelectAllEndPoint();
@@ -221,27 +220,31 @@ class DrawGroup {
         this.operationGroup.clearOperation();
     }
 
-    public startDraw(svg?: SVGGElement) {
+    public startDraw(svg?: SVGPathElement) {
         if (this.mode !== Mode.NONE) {
             return;
         }
 
         this.drawedLine = [];
 
+        this.graph = createSVGElement({
+            element: 'g',
+            attr: {
+                id: `graph-${uuid()}`
+            }
+        });
+        this.contentGroup.append(this.graph);
+
         if (svg) {
-            this.graph = svg;
+            this.originGraph = svg;
+
+            // this.graph = svg;
+            this.originGraph.setAttribute('visibility', 'hidden');
             this.generateEndPoints(svg);
             this.setMode(Mode.SELECT);
         } else {
-            this.graph = createSVGElement({
-                element: 'g',
-                attr: {
-                    id: `graph-${uuid()}`
-                }
-            });
             this.setMode(Mode.DRAW);
         }
-        this.contentGroup.append(this.graph);
 
         this.graph.lastElementChild && this.operationGroup.updateOperation(this.graph.lastElementChild as SVGPathElement);
         this.toogleVisible(true);
@@ -259,20 +262,34 @@ class DrawGroup {
         line && this.operationGroup.updateOperation(line.ele);
     }
 
-    public startSelect(svg: SVGGElement) {
-        this.setMode(Mode.SELECT);
-        this.drawedLine = [];
+    // public startSelect(svg: SVGPathElement) {
+    //     this.setMode(Mode.SELECT);
+    //     this.drawedLine = [];
 
-        this.graph = svg;
-        this.generateEndPoints(svg);
+    //     this.graph = svg;
+    //     this.generateEndPoints(svg);
 
-        this.toogleVisible(true);
-    }
+    //     this.toogleVisible(true);
+    // }
 
-    private generateEndPoints(svg) {
+    private generateEndPoints(svg: SVGPathElement) {
         // this.clearAllPoints();
-        svg.childNodes.forEach((line: SVGPathElement) => {
-            this.appendLine(line);
+        const d = svg.getAttribute('d');
+        const arr = d.split('M ');
+        arr.forEach((str) => {
+            if (str) {
+                const line = createSVGElement({
+                    element: 'path',
+                    attr: {
+                        'stroke-width': 1,
+                        d: `M ${str}`,
+                        fill: 'transparent',
+                        stroke: 'black'
+                    }
+                }) as SVGPathElement;
+
+                this.appendLine(line);
+            }
         });
     }
 
@@ -437,24 +454,7 @@ class DrawGroup {
         this.guideY.setAttribute('visibility', visible ? 'visible' : 'hidden');
     }
 
-    // private updatedrawedPoints() {
-    //     this.drawedLine.forEach(item => {
-    //         const res = this.controlsArray.some(point => {
-    //             if (point instanceof EndPoint) {
-    //                 // TODO 没必要全部遍历
-    //                 const index = item.points.findIndex(p => p[0] === point.point[0] && p[1] === point.point[1]);
-    //                 return index !== -1;
-    //             }
-    //             return false;
-    //         });
-    //         if (res) {
-    //             item.points = this.parsePoints(item.line);
-    //         }
-    //     });
-    // }
-
     private drawCursor(leftKeyPressed: boolean, x: number, y: number) {
-        // TODO 不需要用两种元素了
         if (this.mode === Mode.DRAW) {
             let cursorPoint = this.cursorGroup.querySelector('#cursorPoint');
             if (!cursorPoint) {
@@ -671,6 +671,26 @@ class DrawGroup {
         }
     }
 
+    private compD() {
+        const { d } = this.drawedLine.reduce((p, c) => {
+            // if (p.end.length === 2 && c.points.length === 2) {
+            //     if (p.end[1][0] === c.points[0][0] && p.end[1][1] === c.points[0][1]) {
+            //         p.d += `L ${c.points[1].join(' ')}`;
+            //     }
+            // } else if (p.end.length === 3 && c.points.length === 3) {
+            //     if (p.end[2][0] === c.points[0][0] && p.end[2][1] === c.points[0][1]) {
+            //         p.d += `T ${c.points[1].join(' ')}, ${c.points[2].join(' ')}`;
+            //     }
+            // } else {
+            p.d += c.points.length === 3 ? `M ${c.points[0].join(' ')} Q ${c.points[1].join(' ')} , ${c.points[2].join(' ')}` : `M ${c.points[0].join(' ')} , ${c.points[1].join(' ')}`;
+            // }
+            p.end = c.points;
+            return p;
+        }, { d: '', end: [] });
+
+        return d;
+    }
+
     public drawComplete() {
         if (this.mode !== Mode.DRAW) {
             return null;
@@ -678,27 +698,54 @@ class DrawGroup {
 
         this.toogleVisible(false);
         this.setMode(Mode.NONE);
+        const d = this.compD();
+
+        const graph = createSVGElement({
+            element: 'path',
+            attr: {
+                id: `graph-${uuid()}`,
+                'stroke-width': 1,
+                d,
+                source: d,
+                fill: 'transparent',
+                stroke: 'black'
+            }
+        }) as SVGPathElement;
+        this.graph.remove();
+        this.contentGroup.append(graph);
+
+        const { x, y, width, height } = graph.getBBox();
+        graph.setAttribute('x', (x + width / 2).toString());
+        graph.setAttribute('y', (y + height / 2).toString());
+
         if (this.onDrawComplete) {
-            this.onDrawComplete(this.graph);
+            this.onDrawComplete(graph);
         }
-        return this.graph;
+        return graph;
     }
 
     public transformComplete() {
         if (this.mode !== Mode.SELECT) {
             return;
         }
+        this.originGraph.setAttribute('visibility', 'visible');
+        const beforeGraphTransform = this.originGraph.getAttribute('d');
+        const d = this.compD();
+        this.originGraph.setAttribute('d', d);
+        this.originGraph.setAttribute('source', d);
+        this.graph.remove();
+
+        const { x, y, width, height } = this.originGraph.getBBox();
+        this.originGraph.setAttribute('x', (x + width / 2).toString());
+        this.originGraph.setAttribute('y', (y + height / 2).toString());
+
 
         this.toogleVisible(false);
         if (this.onDrawTransformComplete) {
             this.onDrawTransformComplete({
-                before: this.beforeGraphTransform,
-                after: this.drawedLine.map(line => {
-                    return {
-                        line,
-                        points: cloneDeep(line.points)
-                    };
-                })
+                target: this.originGraph,
+                before: beforeGraphTransform,
+                after: d
             });
         }
         this.setMode(Mode.NONE);

@@ -1,17 +1,18 @@
 import type DrawGroup from '../../ui/SVGEditor/svg-content/DrawGroup';
 import Operation from './Operation';
-import { TransformRecord } from '../../ui/SVGEditor/svg-content/DrawGroup/DrawGroup';
 
 type DrawTransformCompleteProp = {
-    before: TransformRecord[],
-    after: TransformRecord[],
-    drawGroup: DrawGroup
+    before: string,
+    after: string,
+    drawGroup: DrawGroup,
+    target: SVGPathElement
 }
 
 export default class DrawTransformComplete extends Operation<DrawTransformCompleteProp> {
     constructor(props: DrawTransformCompleteProp) {
         super();
         this.state = {
+            target: props.target,
             before: props.before,
             after: props.after,
             drawGroup: props.drawGroup
@@ -19,16 +20,23 @@ export default class DrawTransformComplete extends Operation<DrawTransformComple
     }
 
     public redo() {
-        this.state.after.forEach(record => {
-            record.line.updatePosition(record.points);
-            record.line.updatePosition();
-        });
+        this.state.target.setAttribute('d', this.state.after);
+        this.state.target.setAttribute('source', this.state.after);
+        const { x, y, width, height } = this.state.target.getBBox();
+        this.state.target.setAttribute('x', (x + width / 2).toString());
+        this.state.target.setAttribute('y', (y + height / 2).toString());
+
+
+        // this.getSVGModelByElement(element).onTransform();
     }
 
     public undo() {
-        this.state.before.forEach(record => {
-            record.line.updatePosition(record.points);
-            record.line.updatePosition();
-        });
+        this.state.target.setAttribute('d', this.state.before);
+        this.state.target.setAttribute('source', this.state.before);
+        const { x, y, width, height } = this.state.target.getBBox();
+        this.state.target.setAttribute('x', (x + width / 2).toString());
+        this.state.target.setAttribute('y', (y + height / 2).toString());
+
+        // this.getSVGModelByElement(element).onTransform();
     }
 }
