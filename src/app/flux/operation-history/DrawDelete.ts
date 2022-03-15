@@ -16,7 +16,9 @@ export default class DrawDelete extends Operation<DrawDeleteProp> {
     }
 
     public redo() {
-        this.state.drawGroup.deleteLine(this.state.target);
+        this.state.target.forEach(line => {
+            this.state.drawGroup.deleteLine(line);
+        });
     }
 
     public undo() {

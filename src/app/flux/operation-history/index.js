@@ -4,6 +4,7 @@ import { baseActions as printingBaseActions } from '../printing/actions-base';
 import { actions as projectActions } from '../project';
 import DrawDelete from './DrawDelete';
 import DrawLine from './DrawLine';
+import DrawStart from './DrawStart';
 import DrawTransform from './DrawTransform';
 
 const updateState = (headType, state) => {
@@ -41,11 +42,14 @@ export const actions = {
         }
         dispatch(projectActions.autoSaveEnvironment(headType));
     },
-    clearDrawOperations: (headType) => (dispatch, getState) => {
+    isDrawOperation(operation) {
+        return operation instanceof DrawLine || operation instanceof DrawDelete || operation instanceof DrawTransform || operation instanceof DrawStart;
+    },
+    clearDrawOperations: (headType, keeyDrawStart) => (dispatch, getState) => {
         const { history } = getState()[headType];
         history.history = history.history.filter((item) => {
-            return !item.operations.some(operation => {
-                return operation instanceof DrawLine || operation instanceof DrawDelete || operation instanceof DrawTransform;
+            return !item.operations.some(i => {
+                return i instanceof DrawLine || i instanceof DrawDelete || i instanceof DrawTransform || (!keeyDrawStart && i instanceof DrawStart);
             });
         });
         history.index = history.history.length - 1;

@@ -6,7 +6,7 @@ import SvgIcon from '../components/SvgIcon';
 import styles from './index.styl';
 import { library } from './lib/ext-shapes';
 import i18n from '../../lib/i18n';
-// import Anchor from '../components/Anchor';
+import Anchor from '../components/Anchor';
 
 class SVGLeftBar extends PureComponent {
     static propTypes = {
@@ -18,13 +18,14 @@ class SVGLeftBar extends PureComponent {
         fileInput: PropTypes.object.isRequired,
         allowedFiles: PropTypes.string.isRequired,
         editable: PropTypes.bool,
-        headType: PropTypes.string
+        headType: PropTypes.string,
+        onStartDraw: PropTypes.func.isRequired,
+        onStopDraw: PropTypes.func.isRequired
     };
 
     state = {
         showExtShape: false,
-        extShape: null,
-        showDrawDone: false
+        extShape: null
     };
 
     actions = {
@@ -33,10 +34,12 @@ class SVGLeftBar extends PureComponent {
         },
 
         setMode: (mode, ext) => {
+            if (this.props.mode === 'draw') {
+                this.props.onStopDraw();
+            }
             this.setState({
                 showExtShape: false,
-                extShape: ext ?? this.state.extShape,
-                showDrawDone: mode === 'draw'
+                extShape: ext ?? this.state.extShape
             });
             this.props.setMode(mode, ext);
         },
@@ -55,10 +58,11 @@ class SVGLeftBar extends PureComponent {
                 showExtShape: false
             });
         },
-        draw: () => {
-            this.setState({
-                showDrawDone: false
-            });
+        startDraw: () => {
+            this.props.onStartDraw();
+        },
+        stopDraw: () => {
+            this.props.onStopDraw();
         }
     };
 
@@ -124,7 +128,7 @@ class SVGLeftBar extends PureComponent {
                                             'padding-horizontal-4', 'position-re',
                                             { [styles.selected]: (mode === 'draw') })
                                     }
-                                    onClick={() => this.actions.setMode('draw')}
+                                    onClick={() => this.actions.startDraw()}
                                 />
                             </div>
                             <div className="margin-vertical-4">
@@ -189,30 +193,29 @@ class SVGLeftBar extends PureComponent {
                         </div>
                     </div>
                     {
-                        this.state.showDrawDone && mode === 'draw' && (
-                            <></>
-                            // <div
-                            //     className="position-ab width-272 margin-left-72 margin-top-112 border-default-grey-1 border-radius-8 background-color-white"
-                            // >
-                            //     <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
-                            //         Pen
-                            //     </div>
-                            //     <div>
-                            //         <div className="sm-flex">
-                            //             <Anchor
-                            //                 onClick={() => {
-                            //                     this.actions.draw();
-                            //                 }}
-                            //             >
-                            //                 <div
-                            //                     className={classNames(styles['center-ext'])}
-                            //                 >
-                            //                     <div>done</div>
-                            //                 </div>
-                            //             </Anchor>
-                            //         </div>
-                            //     </div>
-                            // </div>
+                        mode === 'draw' && (
+                            <div
+                                className="position-ab width-272 margin-left-72 margin-top-112 border-default-grey-1 border-radius-8 background-color-white"
+                            >
+                                <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                                    Pen
+                                </div>
+                                <div>
+                                    <div className="sm-flex">
+                                        <Anchor
+                                            onClick={() => {
+                                                this.actions.stopDraw();
+                                            }}
+                                        >
+                                            <div
+                                                className={classNames(styles['center-ext'])}
+                                            >
+                                                <div>done</div>
+                                            </div>
+                                        </Anchor>
+                                    </div>
+                                </div>
+                            </div>
                         )
                     }
                     {showExtShape && mode === 'ext' && (

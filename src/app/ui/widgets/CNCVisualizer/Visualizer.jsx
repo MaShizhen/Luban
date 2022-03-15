@@ -258,8 +258,8 @@ class Visualizer extends Component {
         onUpdateSelectedModelPosition: (position) => {
             this.props.onSetSelectedModelPosition(position);
         },
-        deleteSelectedModel: () => {
-            this.props.removeSelectedModelsByCallback();
+        deleteSelectedModel: (mode) => {
+            this.props.removeSelectedModelsByCallback(mode);
         },
         arrangeAllModels: () => {
             this.props.arrangeAllModels2D();
@@ -295,14 +295,20 @@ class Visualizer extends Component {
         onDrawLine: (line) => {
             this.props.onDrawLine(line);
         },
-        onDrawDelele: (lines) => {
-            this.props.onDrawDelele(lines);
+        onDrawDelete: (lines) => {
+            this.props.onDrawDelete(lines);
         },
         onDrawTransform: ({ before, after }) => {
             this.props.onDrawTransform(before, after);
         },
         onDrawTransformComplete: ({ target, before, after }) => {
             this.props.onDrawTransformComplete(target, before, after);
+        },
+        onDrawStart: (mode) => {
+            this.props.onDrawStart(mode);
+        },
+        onDrawComplete: (ele) => {
+            this.props.onDrawComplete(ele);
         }
     };
 
@@ -729,8 +735,7 @@ const mapDispatchToProps = (dispatch) => {
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('cnc', flip)),
         selectModelInProcess: (intersect, selectEvent) => dispatch(editorActions.selectModelInProcess('cnc', intersect, selectEvent)),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('cnc')),
-        removeSelectedModelsByCallback: () => dispatch(editorActions.removeSelectedModelsByCallback('cnc')),
-
+        removeSelectedModelsByCallback: (mode) => dispatch(editorActions.removeSelectedModelsByCallback('cnc', mode)),
         cut: () => dispatch(editorActions.cut('cnc')),
         copy: () => dispatch(editorActions.copy('cnc')),
         paste: () => dispatch(editorActions.paste('cnc')),
@@ -749,9 +754,11 @@ const mapDispatchToProps = (dispatch) => {
         checkIsOversizeImage: (file, onFailure) => dispatch(editorActions.checkIsOversizeImage('cnc', file, onFailure)),
 
         onDrawLine: (line) => dispatch(editorActions.drawLine('cnc', line)),
-        onDrawDelele: (lines) => dispatch(editorActions.drawDelele('cnc', lines)),
+        onDrawDelete: (lines) => dispatch(editorActions.drawDelete('cnc', lines)),
         onDrawTransform: (before, after) => dispatch(editorActions.drawTransform('cnc', before, after)),
         onDrawTransformComplete: (target, before, after) => dispatch(editorActions.drawTransformComplete('cnc', target, before, after)),
+        onDrawStart: (mode) => dispatch(editorActions.drawStart('cnc', mode)),
+        onDrawComplete: (ele) => dispatch(editorActions.drawComplete('cnc', ele)),
 
         elementActions: {
             moveElementsStart: (elements, options) => dispatch(editorActions.moveElementsStart('cnc', elements, options)),

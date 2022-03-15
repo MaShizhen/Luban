@@ -15,6 +15,8 @@ class SVGContentGroup {
 
     drawGroup = null;
 
+    onChangeMode
+
     constructor(options) {
         const { svgContent, scale } = options;
 
@@ -61,8 +63,13 @@ class SVGContentGroup {
             this.onChangeMode('select');
             this.onDrawTransformComplete({ target, before, after });
         };
-        this.drawGroup.onDrawComplete = () => {
+        this.drawGroup.onDrawStart = (mode) => {
+            this.onChangeMode('draw');
+            this.onDrawStart(mode);
+        };
+        this.drawGroup.onDrawComplete = (svg) => {
             this.onChangeMode('select');
+            this.onDrawComplete(svg);
         };
     }
 

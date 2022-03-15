@@ -278,8 +278,8 @@ class Visualizer extends Component {
         onUpdateSelectedModelPosition: (position) => {
             this.props.onSetSelectedModelPosition(position);
         },
-        deleteSelectedModel: () => {
-            this.props.removeSelectedModelsByCallback();
+        deleteSelectedModel: (mode) => {
+            this.props.removeSelectedModelsByCallback(mode);
         },
         arrangeAllModels: () => {
             this.props.arrangeAllModels2D();
@@ -315,14 +315,20 @@ class Visualizer extends Component {
         onDrawLine: (line) => {
             this.props.onDrawLine(line);
         },
-        onDrawDelele: (lines) => {
-            this.props.onDrawDelele(lines);
+        onDrawDelete: (lines) => {
+            this.props.onDrawDelete(lines);
         },
         onDrawTransform: ({ before, after }) => {
             this.props.onDrawTransform(before, after);
         },
         onDrawTransformComplete: ({ target, before, after }) => {
             this.props.onDrawTransformComplete(target, before, after);
+        },
+        onDrawStart: (mode) => {
+            this.props.onDrawStart(mode);
+        },
+        onDrawComplete: (ele) => {
+            this.props.onDrawComplete(ele);
         }
     };
 
@@ -738,7 +744,7 @@ const mapDispatchToProps = (dispatch) => {
         onSetSelectedModelPosition: (position) => dispatch(editorActions.onSetSelectedModelPosition('laser', position)),
         onFlipSelectedModel: (flip) => dispatch(editorActions.onFlipSelectedModel('laser', flip)),
         selectModelInProcess: (intersect, selectEvent) => dispatch(editorActions.selectModelInProcess('laser', intersect, selectEvent)),
-        removeSelectedModelsByCallback: () => dispatch(editorActions.removeSelectedModelsByCallback('laser')),
+        removeSelectedModelsByCallback: (mode) => dispatch(editorActions.removeSelectedModelsByCallback('laser', mode)),
         duplicateSelectedModel: () => dispatch(editorActions.duplicateSelectedModel('laser')),
 
         cut: () => dispatch(editorActions.cut('laser')),
@@ -760,9 +766,11 @@ const mapDispatchToProps = (dispatch) => {
         switchToPage: (page) => dispatch(editorActions.switchToPage('laser', page)),
 
         onDrawLine: (line) => dispatch(editorActions.drawLine('laser', line)),
-        onDrawDelele: (lines) => dispatch(editorActions.drawDelele('laser', lines)),
+        onDrawDelete: (lines) => dispatch(editorActions.drawDelete('laser', lines)),
         onDrawTransform: (before, after) => dispatch(editorActions.drawTransform('laser', before, after)),
         onDrawTransformComplete: (target, before, after) => dispatch(editorActions.drawTransformComplete('laser', target, before, after)),
+        onDrawStart: (mode) => dispatch(editorActions.drawStart('laser', mode)),
+        onDrawComplete: (ele) => dispatch(editorActions.drawComplete('laser', ele)),
 
         elementActions: {
             moveElementsStart: (elements) => dispatch(editorActions.moveElementsStart('laser', elements)),

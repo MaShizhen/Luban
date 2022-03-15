@@ -51,6 +51,7 @@ import DrawDelete from '../operation-history/DrawDelete';
 import DrawLine from '../operation-history/DrawLine';
 import DrawTransform from '../operation-history/DrawTransform';
 import DrawTransformComplete from '../operation-history/DrawTransformComplete';
+import DrawStart from '../operation-history/DrawStart';
 
 const getSourceType = (fileName) => {
     let sourceType;
@@ -935,10 +936,10 @@ export const actions = {
         }
     },
 
-    removeSelectedModelsByCallback: (headType) => (dispatch) => {
+    removeSelectedModelsByCallback: (headType, mode) => (dispatch) => {
         dispatch(actions.updateState(headType, {
             removingModelsWarningCallback: () => {
-                dispatch(actions.removeSelectedModel(headType));
+                dispatch(actions.removeSelectedModel(headType, mode));
             }
         }));
         dispatch(actions.checkToRemoveSelectedModels(headType));
@@ -970,7 +971,11 @@ export const actions = {
         }));
     },
 
-    removeSelectedModel: (headType) => (dispatch, getState) => {
+    removeSelectedModel: (headType, mode) => (dispatch, getState) => {
+        if (mode === 'draw') {
+            dispatch(actions.drawDelete(headType));
+            return;
+        }
         const { modelGroup, SVGActions, toolPathGroup } = getState()[headType];
         const operations = new Operations();
         for (const svgModel of modelGroup.getSelectedModelArray()) {
@@ -1305,7 +1310,7 @@ export const actions = {
     /**
      * Create model from element.
      */
-    createModelFromElement: (headType, element, isDraw = false) => async (dispatch, getState) => {
+    createModelFromElement: (headType, element) => async (dispatch, getState) => {
         const { SVGActions, toolPathGroup } = getState()[headType];
 
         const newSVGModel = await SVGActions.createModelFromElement(element);
@@ -1317,11 +1322,6 @@ export const actions = {
             });
             const operations = new Operations();
             operations.push(operation);
-
-            if (isDraw) {
-                dispatch(operationHistoryActions.clearDrawOperations(headType));
-            }
-
             dispatch(operationHistoryActions.setOperations(headType, operations));
         }
 
@@ -1388,14 +1388,8 @@ export const actions = {
         const { SVGActions } = getState()[headType];
 
         SVGActions.clearSelection();
-        if (SVGActions.svgContentGroup.drawGroup.mode === 1) {
-            const newDrawEle = SVGActions.svgContentGroup.drawGroup.drawComplete();
-            if (newDrawEle) {
-                dispatch(actions.createModelFromElement(headType, newDrawEle, true));
-            }
-        } else if (SVGActions.svgContentGroup.drawGroup.mode === 2) {
-            SVGActions.svgContentGroup.drawGroup.transformComplete();
-            dispatch(operationHistoryActions.clearDrawOperations(headType));
+        if (SVGActions.svgContentGroup.drawGroup.mode) {
+            SVGActions.svgContentGroup.drawGroup.stopDraw();
         }
         dispatch(baseActions.render(headType));
     },
@@ -2114,19 +2108,22 @@ export const actions = {
             history
         }));
     },
-    drawDelele: (headType, lines) => (dispatch, getState) => {
+    drawDelete: (headType) => (dispatch, getState) => {
         const { contentGroup, history } = getState()[headType];
 
-        const operations = new Operations();
-        const operation = new DrawDelete({
-            target: lines,
-            drawGroup: contentGroup.drawGroup
-        });
-        operations.push(operation);
-        history.push(operations);
-        dispatch(actions.updateState(headType, {
-            history
-        }));
+        const deletedLineEles = contentGroup.drawGroup.onDelete();
+        if (deletedLineEles.length > 0) {
+            const operations = new Operations();
+            const operation = new DrawDelete({
+                target: deletedLineEles,
+                drawGroup: contentGroup.drawGroup
+            });
+            operations.push(operation);
+            history.push(operations);
+            dispatch(actions.updateState(headType, {
+                history
+            }));
+        }
     },
     drawTransform: (headType, before, after) => (dispatch, getState) => {
         const { contentGroup, history } = getState()[headType];
@@ -2160,6 +2157,33 @@ export const actions = {
         dispatch(actions.updateState(headType, {
             history
         }));
+    },
+    drawStart: (headType, ele) => (dispatch, getState) => {
+        const { contentGroup, history } = getState()[headType];
+
+        if (history.history[history.index]?.operations[0] instanceof DrawStart) {
+            return;
+        }
+        const operations = new Operations();
+        const operation = new DrawStart({
+            ele,
+            contentGroup
+        });
+        operations.push(operation);
+        history.push(operations);
+
+        // operations.undoCallback = () => {
+        //     dispatch(operationHistoryActions.clearDrawOperations(headType, true));
+        // };
+        dispatch(actions.updateState(headType, {
+            history
+        }));
+    },
+    drawComplete: (headType, elem) => (dispatch) => {
+        if (elem) {
+            dispatch(operationHistoryActions.clearDrawOperations(headType));
+            dispatch(actions.createModelFromElement(headType, elem, true));
+        }
     }
 };
 

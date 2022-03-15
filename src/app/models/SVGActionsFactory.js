@@ -100,7 +100,8 @@ function genModelConfig(elem, size, materials = {}) {
             text: elem.getAttribute('textContent'),
             alignment: 'left',
             'font-size': elem.getAttribute('font-size'),
-            'font-family': elem.getAttribute('font-family')
+            'font-family': elem.getAttribute('font-family'),
+            'svg-path-d': elem.getAttribute('d')
         }
     };
 

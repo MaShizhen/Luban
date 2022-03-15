@@ -101,7 +101,7 @@ class SVGEditor extends PureComponent {
             },
             [shortcutActions.DELETE]: () => {
                 if (!(this.props.menuDisabledCount > 0)) {
-                    this.props.editorActions.deleteSelectedModel();
+                    this.props.editorActions.deleteSelectedModel(this.state.mode);
                 }
             },
             [shortcutActions.COPY]: () => {
@@ -225,6 +225,14 @@ class SVGEditor extends PureComponent {
         this.canvas.current.autoFocus();
     }
 
+    onStartDraw() {
+        this.canvas.current.svgContentGroup.drawGroup.startDraw();
+    }
+
+    onStopDraw() {
+        this.canvas.current.svgContentGroup.drawGroup.stopDraw();
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -255,9 +263,11 @@ class SVGEditor extends PureComponent {
                                 elementActions={this.props.elementActions}
                                 hideLeftBarOverlay={this.hideLeftBarOverlay}
                                 onDrawLine={this.props.editorActions.onDrawLine}
-                                onDrawDelete={this.props.editorActions.onDrawDelele}
+                                onDrawDelete={this.props.editorActions.onDrawDelete}
                                 onDrawTransform={this.props.editorActions.onDrawTransform}
                                 onDrawTransformComplete={this.props.editorActions.onDrawTransformComplete}
+                                onDrawStart={this.props.editorActions.onDrawStart}
+                                onDrawComplete={this.props.editorActions.onDrawComplete}
                             />
                         </div>
                         <SVGLeftBar
@@ -271,6 +281,8 @@ class SVGEditor extends PureComponent {
                             allowedFiles={this.props.allowedFiles}
                             editable={this.props.editable}
                             headType={this.props.headType}
+                            onStartDraw={() => this.onStartDraw()}
+                            onStopDraw={() => this.onStopDraw()}
                         />
                     </div>
                 </div>

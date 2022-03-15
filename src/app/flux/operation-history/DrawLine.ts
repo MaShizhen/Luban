@@ -21,7 +21,7 @@ export default class DrawLine extends Operation<DrawLineProp> {
     }
 
     public undo() {
-        this.state.drawGroup.deleteLine([this.state.target]);
+        this.state.drawGroup.deleteLine(this.state.target);
         this.state.drawGroup.resetOperation();
     }
 }

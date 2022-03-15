@@ -41,9 +41,9 @@ class OperationGroup {
             }
         });
 
-        container.append(this.controlPoints);
-        container.append(this.connectLines);
-        container.append(this.previewLine);
+        container.parentElement.append(this.controlPoints);
+        container.parentElement.append(this.connectLines);
+        container.parentElement.append(this.previewLine);
     }
 
     private createLine(a: TCoordinate, b: TCoordinate) {

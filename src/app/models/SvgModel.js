@@ -355,7 +355,8 @@ class SvgModel extends BaseModel {
                 svgNodeName: elem.nodeName,
                 text: elem.getAttribute('textContent'),
                 'font-size': elem.getAttribute('font-size'),
-                'font-family': elem.getAttribute('font-family')
+                'font-family': elem.getAttribute('font-family'),
+                'svg-path-d': elem.getAttribute('d')
             }
         };
 
@@ -475,8 +476,15 @@ class SvgModel extends BaseModel {
             //     numberAttrs.push('x1', 'y1', 'x2', 'y2');
             //     break;
             case 'path': {
-                const isDraw = elem.getAttribute('id').includes('graph');
-                if (isDraw) {
+                const isDraw = elem.getAttribute('id')?.includes('graph');
+                if (isDraw && config['svg-path-d']) {
+                    elem.setAttribute('d', config['svg-path-d']);
+                    elem.setAttribute('source', config['svg-path-d']);
+
+                    const bbox = elem.getBBox();
+                    elem.setAttribute('x', (bbox.x + bbox.width / 2).toString());
+                    elem.setAttribute('y', (bbox.y + bbox.height / 2).toString());
+
                     break;
                 }
                 const imageElement = document.createElementNS(NS.SVG, 'image');
