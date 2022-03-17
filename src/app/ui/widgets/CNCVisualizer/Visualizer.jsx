@@ -304,11 +304,11 @@ class Visualizer extends Component {
         onDrawTransformComplete: ({ target, before, after }) => {
             this.props.onDrawTransformComplete(target, before, after);
         },
-        onDrawStart: (mode) => {
-            this.props.onDrawStart(mode);
+        onDrawStart: (elem) => {
+            this.props.onDrawStart(elem);
         },
-        onDrawComplete: (ele) => {
-            this.props.onDrawComplete(ele);
+        onDrawComplete: (elem) => {
+            this.props.onDrawComplete(elem);
         }
     };
 
@@ -757,8 +757,8 @@ const mapDispatchToProps = (dispatch) => {
         onDrawDelete: (lines) => dispatch(editorActions.drawDelete('cnc', lines)),
         onDrawTransform: (before, after) => dispatch(editorActions.drawTransform('cnc', before, after)),
         onDrawTransformComplete: (target, before, after) => dispatch(editorActions.drawTransformComplete('cnc', target, before, after)),
-        onDrawStart: (mode) => dispatch(editorActions.drawStart('cnc', mode)),
-        onDrawComplete: (ele) => dispatch(editorActions.drawComplete('cnc', ele)),
+        onDrawStart: (elem) => dispatch(editorActions.drawStart('cnc', elem)),
+        onDrawComplete: (elem) => dispatch(editorActions.drawComplete('cnc', elem)),
 
         elementActions: {
             moveElementsStart: (elements, options) => dispatch(editorActions.moveElementsStart('cnc', elements, options)),

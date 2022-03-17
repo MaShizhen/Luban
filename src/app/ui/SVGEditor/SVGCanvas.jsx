@@ -332,11 +332,16 @@ class SVGCanvas extends PureComponent {
         this.svgContentGroup.onDrawTransformComplete = ({ target, before, after }) => {
             this.props.onDrawTransformComplete({ target, before, after });
         };
-        this.svgContentGroup.onDrawStart = (mode) => {
-            this.props.onDrawStart(mode);
+        this.svgContentGroup.onDrawStart = (elem) => {
+            if (elem) {
+                jQuery(this.svgContainer).css('cursor', 'auto');
+            } else {
+                jQuery(this.svgContainer).css('cursor', 'none');
+            }
+            this.props.onDrawStart(elem);
         };
-        this.svgContentGroup.onDrawComplete = (ele) => {
-            this.props.onDrawComplete(ele);
+        this.svgContentGroup.onDrawComplete = (elem) => {
+            this.props.onDrawComplete(elem);
         };
         this.svgContentGroup.onChangeMode = (mode) => {
             this.setMode(mode);
@@ -372,9 +377,7 @@ class SVGCanvas extends PureComponent {
     setMode(mode, extShape) {
         if (mode === 'select') {
             jQuery(this.svgContainer).css('cursor', 'auto');
-        } else if (mode === 'draw') {
-            jQuery(this.svgContainer).css('cursor', 'pointer');
-        } else {
+        } else if (mode !== 'draw') {
             jQuery(this.svgContainer).css('cursor', 'crosshair');
         }
 

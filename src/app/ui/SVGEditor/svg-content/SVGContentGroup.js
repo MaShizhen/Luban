@@ -63,9 +63,9 @@ class SVGContentGroup {
             this.onChangeMode('select');
             this.onDrawTransformComplete({ target, before, after });
         };
-        this.drawGroup.onDrawStart = (mode) => {
+        this.drawGroup.onDrawStart = (elem) => {
             this.onChangeMode('draw');
-            this.onDrawStart(mode);
+            this.onDrawStart(elem);
         };
         this.drawGroup.onDrawComplete = (svg) => {
             this.onChangeMode('select');

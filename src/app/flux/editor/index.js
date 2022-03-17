@@ -2158,7 +2158,7 @@ export const actions = {
             history
         }));
     },
-    drawStart: (headType, ele) => (dispatch, getState) => {
+    drawStart: (headType, elem) => (dispatch, getState) => {
         const { contentGroup, history } = getState()[headType];
 
         if (history.history[history.index]?.operations[0] instanceof DrawStart) {
@@ -2166,7 +2166,7 @@ export const actions = {
         }
         const operations = new Operations();
         const operation = new DrawStart({
-            ele,
+            elem,
             contentGroup
         });
         operations.push(operation);

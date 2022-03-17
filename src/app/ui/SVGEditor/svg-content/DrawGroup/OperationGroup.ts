@@ -1,5 +1,5 @@
 import { createSVGElement } from '../../element-utils';
-import { Mode, ThemeColor } from './constants';
+import { Mode, pointRadius, pointSize, ThemeColor } from './constants';
 import { ControlPoint, EndPoint } from './Point';
 
 type TCoordinate = [number, number]
@@ -63,19 +63,19 @@ class OperationGroup {
         const attr = {
             fill: 'transparent',
             'fill-opacity': 1,
-            width: 4,
-            height: 4,
-            x: point.x - 2,
-            y: point.y - 2,
-            rx: '0',
-            ry: '0',
+            width: pointSize,
+            height: pointSize,
+            x: point.x - pointRadius,
+            y: point.y - pointRadius,
             stroke: ThemeColor,
+            rx: '',
+            ry: '',
             'pointer-events': 'all',
             'is-controls': true
         };
         if (point instanceof EndPoint) {
-            attr.rx = '2';
-            attr.ry = '2';
+            attr.rx = pointRadius.toString();
+            attr.ry = pointRadius.toString();
         }
         return createSVGElement({
             element: 'rect',
@@ -91,13 +91,13 @@ class OperationGroup {
 
     private renderControlPoints(controlPointData: ControlPoint[]) {
         controlPointData.forEach((item, index) => {
-            const ele = this.controlPoints.children[index];
-            if (ele) {
-                ele.setAttribute('x', (item.x - 2).toString());
-                ele.setAttribute('y', (item.y - 2).toString());
-                ele.setAttribute('rx', '0');
-                ele.setAttribute('ry', '0');
-                ele.setAttribute('visibility', 'visible');
+            const elem = this.controlPoints.children[index];
+            if (elem) {
+                elem.setAttribute('x', (item.x - pointRadius).toString());
+                elem.setAttribute('y', (item.y - pointRadius).toString());
+                elem.setAttribute('rx', '0');
+                elem.setAttribute('ry', '0');
+                elem.setAttribute('visibility', 'visible');
             } else {
                 this.controlPoints.append(this.createPoint(item));
             }
@@ -109,13 +109,13 @@ class OperationGroup {
 
     private renderEndPoints() {
         const firstEndPoint = this.controlsArray[0] as EndPoint;
-        const ele = this.controlPoints.firstElementChild;
-        if (ele) {
-            ele.setAttribute('x', (firstEndPoint.x - 2).toString());
-            ele.setAttribute('y', (firstEndPoint.y - 2).toString());
-            ele.setAttribute('rx', '2');
-            ele.setAttribute('ry', '2');
-            ele.setAttribute('visibility', 'visible');
+        const elem = this.controlPoints.firstElementChild;
+        if (elem) {
+            elem.setAttribute('x', (firstEndPoint.x - pointRadius).toString());
+            elem.setAttribute('y', (firstEndPoint.y - pointRadius).toString());
+            elem.setAttribute('rx', pointRadius.toString());
+            elem.setAttribute('ry', pointRadius.toString());
+            elem.setAttribute('visibility', 'visible');
 
             Array.from(this.controlPoints.children).forEach((child, index) => {
                 if (index !== 0) {
@@ -129,10 +129,10 @@ class OperationGroup {
 
     private renderControlLines(lineEndPoints: Array<[TCoordinate, TCoordinate]>) {
         lineEndPoints.forEach((item, index) => {
-            const ele = this.connectLines.children[index];
-            if (ele) {
-                ele.setAttribute('d', `M ${item[0].join(' ')} L ${item[1].join(' ')} Z`);
-                ele.setAttribute('visibility', 'visible');
+            const elem = this.connectLines.children[index];
+            if (elem) {
+                elem.setAttribute('d', `M ${item[0].join(' ')} L ${item[1].join(' ')} Z`);
+                elem.setAttribute('visibility', 'visible');
             } else {
                 this.connectLines.append(this.createLine(item[0], item[1]));
             }
@@ -190,9 +190,9 @@ class OperationGroup {
         this.updateControlsLine(this.controlsArray);
     }
 
-    private parseLine(ele: SVGPathElement) {
+    private parseLine(elem: SVGPathElement) {
         this.controlsArray = [];
-        const d = ele.getAttribute('d');
+        const d = elem.getAttribute('d');
         const res: string[] = d.match(/\d+\.*\d*/g);
         const points: Array<TCoordinate> = [];
         if (res) {
@@ -232,8 +232,8 @@ class OperationGroup {
         this.setControlsArray(point);
     }
 
-    public updateOperation(ele: SVGPathElement) {
-        this.parseLine(ele);
+    public updateOperation(elem: SVGPathElement) {
+        this.parseLine(elem);
         this.updateControlsLine(this.controlsArray);
     }
 
@@ -243,23 +243,26 @@ class OperationGroup {
         }
 
         this.updateControlsLine([...this.controlsArray, cursorPoint]);
-
-
-        // const leftKeyPressed = event.which === 1;
-        // if (leftKeyPressed) {
-
-        // }
     }
 
     public clearOperation() {
         this.controlsArray = [];
-        Array.from(this.controlPoints.children).forEach(ele => {
-            ele.setAttribute('visibility', 'hidden');
+        Array.from(this.controlPoints.children).forEach(elem => {
+            elem.setAttribute('visibility', 'hidden');
         });
-        Array.from(this.connectLines.children).forEach(ele => {
-            ele.setAttribute('visibility', 'hidden');
+        Array.from(this.connectLines.children).forEach(elem => {
+            elem.setAttribute('visibility', 'hidden');
         });
         this.previewLine.setAttribute('visibility', 'hidden');
+    }
+
+    public isClosedLoop() {
+        if (this.controlsArray.length > 0) {
+            const lasetEndPoint = this.controlsArray[this.controlsArray.length - 1];
+            if (lasetEndPoint instanceof EndPoint) {
+                this.controlsArray = [];
+            }
+        }
     }
 }
 

@@ -7,3 +7,7 @@ export enum Mode {
     DRAW,
     SELECT
 }
+
+export const pointSize = 5.5;
+export const pointRadius = pointSize / 2;
+export const AttachPointRadius = 2;

@@ -449,6 +449,10 @@ class SvgModel extends BaseModel {
         return this.elem.transform.baseVal;
     }
 
+    isDrawGraphic() {
+        return this.elem.getAttribute('id')?.includes('graph');
+    }
+
     refreshElemAttrs() {
         const elem = this.elem;
         const { config, transformation, width, height } = this;
@@ -476,10 +480,20 @@ class SvgModel extends BaseModel {
             //     numberAttrs.push('x1', 'y1', 'x2', 'y2');
             //     break;
             case 'path': {
-                const isDraw = elem.getAttribute('id')?.includes('graph');
+                const isDraw = this.isDrawGraphic();
                 if (isDraw && config['svg-path-d']) {
-                    elem.setAttribute('d', config['svg-path-d']);
-                    elem.setAttribute('source', config['svg-path-d']);
+                    let d = config['svg-path-d'];
+                    const originX = elem.getAttribute('x');
+                    const originY = elem.getAttribute('y');
+
+                    if (originX && originY && (Number(originX) !== x || Number(originY) !== y)) {
+                        d = d.replace(/\d+\.*\d*\s+\d+\.*\d*/g, (coordinateString) => {
+                            const [currentX, currentY] = coordinateString.split(' ');
+                            return [Number(currentX) + x - Number(originX), Number(currentY) + y - Number(originY)].join(' ');
+                        });
+                    }
+                    elem.setAttribute('d', d);
+                    elem.setAttribute('source', d);
 
                     const bbox = elem.getBBox();
                     elem.setAttribute('x', (bbox.x + bbox.width / 2).toString());
@@ -1131,7 +1145,11 @@ class SvgModel extends BaseModel {
         // Need to update source for SVG, element attributes(width, height) changed
         // Not to update source for text, because <path> need to remap first
         // Todo, <Path> error, add remap method or not to use model source
-        this.updateSource();
+        // this.updateSource();
+        const isDraw = this.isDrawGraphic();
+        if (isDraw) {
+            this.config['svg-path-d'] = this.elem.getAttribute('d');
+        }
     }
 
     async updateAndRefresh({ transformation, config, ...others } = {}) {
@@ -1167,7 +1185,9 @@ class SvgModel extends BaseModel {
     clone(modelGroup) {
         const clone = new SvgModel({ ...this }, modelGroup);
         clone.originModelID = this.modelID;
-        clone.modelID = uuid();
+        const specialPrefix = this.isDrawGraphic() ? 'graph-' : '';
+        clone.modelID = `${specialPrefix}${uuid()}`;
+        clone.updateConfig(clone.config);
         clone.generateModelObject3D();
         clone.generateProcessObject3D();
         this.meshObject.updateMatrixWorld();

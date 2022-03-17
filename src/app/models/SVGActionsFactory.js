@@ -50,13 +50,17 @@ function genModelConfig(elem, size, materials = {}) {
         }
         coord.positionX = 0;
     }
+
     if (elem.nodeName === 'path') {
-        coord.positionX = +elem.getAttribute('x') + coord.width / 2 * coord.scaleX - size.x;
-        coord.positionY = size.y - (+elem.getAttribute('y')) - coord.height / 2 * coord.scaleY;
-        deltaLeftX = 0.5;
-        deltaRightX = 1;
-        deltaTopY = 0.5;
-        deltaBottomY = 1;
+        const isDraw = elem.getAttribute('id')?.includes('graph');
+        if (!isDraw) {
+            coord.positionX = +elem.getAttribute('x') + coord.width / 2 * coord.scaleX - size.x;
+            coord.positionY = size.y - (+elem.getAttribute('y')) - coord.height / 2 * coord.scaleY;
+            deltaLeftX = 0.5;
+            deltaRightX = 1;
+            deltaTopY = 0.5;
+            deltaBottomY = 1;
+        }
     }
 
     // eslint-disable-next-line prefer-const
