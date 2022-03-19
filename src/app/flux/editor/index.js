@@ -2140,23 +2140,27 @@ export const actions = {
             history
         }));
     },
-    drawTransformComplete: (headType, target, before, after) => (dispatch, getState) => {
-        const { contentGroup, history } = getState()[headType];
-
-        const operations = new Operations();
-        const operation = new DrawTransformComplete({
-            target,
-            before,
-            after,
-            drawGroup: contentGroup.drawGroup
-        });
-        operations.push(operation);
-        history.push(operations);
-
+    drawTransformComplete: (headType, elem, before, after) => (dispatch, getState) => {
+        const { contentGroup, history, SVGActions } = getState()[headType];
         dispatch(operationHistoryActions.clearDrawOperations(headType));
-        dispatch(actions.updateState(headType, {
-            history
-        }));
+        if (before !== after) {
+            const operations = new Operations();
+            const operation = new DrawTransformComplete({
+                elem,
+                before,
+                after,
+                drawGroup: contentGroup.drawGroup
+            });
+            operations.push(operation);
+            history.push(operations);
+
+            const model = SVGActions.getSVGModelByElement(elem);
+            model.onTransform();
+
+            dispatch(actions.updateState(headType, {
+                history
+            }));
+        }
     },
     drawStart: (headType, elem) => (dispatch, getState) => {
         const { contentGroup, history } = getState()[headType];

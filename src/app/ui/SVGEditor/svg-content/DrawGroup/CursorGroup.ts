@@ -1,5 +1,8 @@
 import { createSVGElement } from '../../element-utils';
-import { AttachPointRadius, Mode, pointRadius, pointSize, ThemeColor } from './constants';
+import { Mode, AttachPointRadius, pointRadius, pointSize, pointWeight, ThemeColor, TCoordinate } from './constants';
+
+
+const cursorWidth = 120;
 
 class CursorGroup {
     public mode: Mode;
@@ -14,7 +17,12 @@ class CursorGroup {
 
     private attachTip: SVGGElement;
 
-    constructor() {
+    private cursorCoordinate: TCoordinate = [0, 0];
+
+    private scale: number;
+
+    constructor(scale: number) {
+        this.scale = scale;
         this.init();
     }
 
@@ -26,10 +34,10 @@ class CursorGroup {
                 'visibility': 'hidden'
             }
         });
-        this.group.append(this.getDefault());
         this.group.append(this.getCursorPoint());
         this.group.append(this.getAttachPoint());
         this.group.append(this.getAttachTip());
+        this.group.append(this.getDefault());
     }
 
     private getCursorPoint() {
@@ -38,11 +46,12 @@ class CursorGroup {
             attr: {
                 fill: '',
                 'fill-opacity': 1,
-                width: pointSize,
-                height: pointSize,
+                width: pointSize / this.scale,
+                height: pointSize / this.scale,
                 rx: '0',
                 ry: '0',
-                stroke: ThemeColor
+                stroke: ThemeColor,
+                'stroke-width': pointWeight / this.scale
             }
         });
         return this.cursorPoint;
@@ -52,9 +61,10 @@ class CursorGroup {
         this.attachPoint = createSVGElement({
             element: 'circle',
             attr: {
-                r: AttachPointRadius,
+                r: AttachPointRadius / this.scale,
                 stroke: 'black',
-                'stroke-opacity': 0.5
+                'stroke-opacity': 0.5,
+                'stroke-width': pointWeight / this.scale
             }
         });
         return this.attachPoint;
@@ -64,9 +74,9 @@ class CursorGroup {
         const cursor: SVGSVGElement = createSVGElement({
             element: 'svg',
             attr: {
-                width: '20',
-                height: '20',
-                viewBox: '0 0 30 30',
+                width: cursorWidth / this.scale,
+                height: cursorWidth / this.scale,
+                viewBox: '0 0 90 90',
                 fill: 'none'
             }
         });
@@ -95,14 +105,16 @@ class CursorGroup {
             element: 'path',
             attr: {
                 stroke: 'red',
-                d: ''
+                d: '',
+                'stroke-width': pointWeight / this.scale
             }
         }));
         this.attachTip.append(createSVGElement({
             element: 'path',
             attr: {
                 stroke: 'red',
-                d: ''
+                d: '',
+                'stroke-width': pointWeight / this.scale
             }
         }));
         return this.attachTip;
@@ -113,28 +125,29 @@ class CursorGroup {
         if (this.mode !== Mode.DRAW) {
             return;
         }
+        this.cursorCoordinate = [x, y];
         if (leftKeyPressed) {
-            this.cursorPoint.setAttribute('x', (x - pointRadius).toString());
-            this.cursorPoint.setAttribute('y', (y - pointRadius).toString());
+            this.cursorPoint.setAttribute('x', (x - pointRadius / this.scale).toString());
+            this.cursorPoint.setAttribute('y', (y - pointRadius / this.scale).toString());
             this.cursorPoint.setAttribute('rx', '0');
             this.cursorPoint.setAttribute('ry', '0');
         } else {
-            this.cursorPoint.setAttribute('x', (x - pointRadius).toString());
-            this.cursorPoint.setAttribute('y', (y - pointRadius).toString());
-            this.cursorPoint.setAttribute('rx', pointRadius.toString());
-            this.cursorPoint.setAttribute('ry', pointRadius.toString());
+            this.cursorPoint.setAttribute('x', (x - pointRadius / this.scale).toString());
+            this.cursorPoint.setAttribute('y', (y - pointRadius / this.scale).toString());
+            this.cursorPoint.setAttribute('rx', (pointRadius / this.scale).toString());
+            this.cursorPoint.setAttribute('ry', (pointRadius / this.scale).toString());
         }
 
         this.cursorPoint.setAttribute('fill', '');
-        this.cursor.setAttribute('x', (x - 6.5).toString());
-        this.cursor.setAttribute('y', (y - 4).toString());
+        this.cursor.setAttribute('x', (x - 13.5 / this.scale).toString());
+        this.cursor.setAttribute('y', (y - 8 / this.scale).toString());
     }
 
     public toogleVisible(visible: boolean) {
         this.group.setAttribute('visibility', visible ? 'visible' : 'hidden');
     }
 
-    public isClosedLoop() {
+    public isAttached() {
         return this.attachPoint.getAttribute('visibility') === 'visible';
     }
 
@@ -143,11 +156,11 @@ class CursorGroup {
             return;
         }
         if (x && y) {
-            this.attachPoint.setAttribute('cx', (x + 13).toString());
-            this.attachPoint.setAttribute('cy', (y + 8).toString());
+            this.attachPoint.setAttribute('cx', (x + 26 / this.scale).toString());
+            this.attachPoint.setAttribute('cy', (y + 14 / this.scale).toString());
             this.attachPoint.setAttribute('visibility', 'visible');
 
-            const r = pointSize / 2 - 1;
+            const r = (pointSize / 2 - 1) / this.scale;
             const paths = [
                 `M ${x - r} ${y - r} L ${x + r} ${y + r}`,
                 `M ${x - r} ${y + r} L ${x + r} ${y - r}`,
@@ -162,9 +175,31 @@ class CursorGroup {
         }
     }
 
-
     public keyDown() {
         this.cursorPoint.setAttribute('fill', ThemeColor);
+    }
+
+    public updateScale(scale: number) { // just change the engineer scale
+        this.scale = scale;
+
+        this.cursorPoint.setAttribute('width', (pointSize / this.scale).toString());
+        this.cursorPoint.setAttribute('height', (pointSize / this.scale).toString());
+        this.cursorPoint.setAttribute('stroke-width', (pointWeight / this.scale).toString());
+
+        this.cursor.setAttribute('width', (cursorWidth / this.scale).toString());
+        this.cursor.setAttribute('height', (cursorWidth / this.scale).toString());
+
+        this.attachPoint.setAttribute('r', (AttachPointRadius / this.scale).toString());
+        this.attachPoint.setAttribute('stroke-width', (pointWeight / this.scale).toString());
+
+        Array.from(this.attachTip.children).forEach((elem) => {
+            elem.setAttribute('stroke-width', (pointWeight / this.scale).toString());
+        });
+
+        this.cursorPoint && this.update(
+            this.cursorPoint.getAttribute('rx') === '0',
+            ...this.cursorCoordinate
+        );
     }
 }
 

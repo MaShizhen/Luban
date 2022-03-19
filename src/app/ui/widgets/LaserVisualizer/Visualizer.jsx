@@ -321,8 +321,8 @@ class Visualizer extends Component {
         onDrawTransform: ({ before, after }) => {
             this.props.onDrawTransform(before, after);
         },
-        onDrawTransformComplete: ({ target, before, after }) => {
-            this.props.onDrawTransformComplete(target, before, after);
+        onDrawTransformComplete: ({ elem, before, after }) => {
+            this.props.onDrawTransformComplete(elem, before, after);
         },
         onDrawStart: (elem) => {
             this.props.onDrawStart(elem);
@@ -768,7 +768,7 @@ const mapDispatchToProps = (dispatch) => {
         onDrawLine: (line) => dispatch(editorActions.drawLine('laser', line)),
         onDrawDelete: (lines) => dispatch(editorActions.drawDelete('laser', lines)),
         onDrawTransform: (before, after) => dispatch(editorActions.drawTransform('laser', before, after)),
-        onDrawTransformComplete: (target, before, after) => dispatch(editorActions.drawTransformComplete('laser', target, before, after)),
+        onDrawTransformComplete: (elem, before, after) => dispatch(editorActions.drawTransformComplete('laser', elem, before, after)),
         onDrawStart: (elem) => dispatch(editorActions.drawStart('laser', elem)),
         onDrawComplete: (elem) => dispatch(editorActions.drawComplete('laser', elem)),
 

@@ -48,7 +48,7 @@ class SVGContentGroup {
         });
         this.operatorPoints.showOperator(true);
 
-        this.drawGroup = new DrawGroup(this.group);
+        this.drawGroup = new DrawGroup(this.group, this.scale);
 
         this.drawGroup.onDrawLine = (line) => {
             this.onDrawLine(line);
@@ -59,9 +59,9 @@ class SVGContentGroup {
         this.drawGroup.onDrawTransform = ({ before, after }) => {
             this.onDrawTransform({ before, after });
         };
-        this.drawGroup.onDrawTransformComplete = ({ target, before, after }) => {
+        this.drawGroup.onDrawTransformComplete = ({ elem, before, after }) => {
             this.onChangeMode('select');
-            this.onDrawTransformComplete({ target, before, after });
+            this.onDrawTransformComplete({ elem, before, after });
         };
         this.drawGroup.onDrawStart = (elem) => {
             this.onChangeMode('draw');
@@ -121,6 +121,7 @@ class SVGContentGroup {
 
     updateScale(scale) {
         this.operatorPoints.updateScale(scale);
+        this.drawGroup.updateScale(scale);
         for (const childNode of this.getChildNodes()) {
             childNode.setAttribute('stroke-width', 1 / scale);
         }

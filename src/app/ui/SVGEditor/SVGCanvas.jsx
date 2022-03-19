@@ -329,15 +329,10 @@ class SVGCanvas extends PureComponent {
         this.svgContentGroup.onDrawTransform = ({ before, after }) => {
             this.props.onDrawTransform({ before, after });
         };
-        this.svgContentGroup.onDrawTransformComplete = ({ target, before, after }) => {
-            this.props.onDrawTransformComplete({ target, before, after });
+        this.svgContentGroup.onDrawTransformComplete = ({ elem, before, after }) => {
+            this.props.onDrawTransformComplete({ elem, before, after });
         };
         this.svgContentGroup.onDrawStart = (elem) => {
-            if (elem) {
-                jQuery(this.svgContainer).css('cursor', 'auto');
-            } else {
-                jQuery(this.svgContainer).css('cursor', 'none');
-            }
             this.props.onDrawStart(elem);
         };
         this.svgContentGroup.onDrawComplete = (elem) => {
@@ -377,7 +372,13 @@ class SVGCanvas extends PureComponent {
     setMode(mode, extShape) {
         if (mode === 'select') {
             jQuery(this.svgContainer).css('cursor', 'auto');
-        } else if (mode !== 'draw') {
+        } else if (mode === 'draw') {
+            if (this.svgContentGroup.drawGroup.mode === 1) {
+                jQuery(this.svgContainer).css('cursor', 'none');
+            } else {
+                jQuery(this.svgContainer).css('cursor', 'auto');
+            }
+        } else {
             jQuery(this.svgContainer).css('cursor', 'crosshair');
         }
 
@@ -444,6 +445,9 @@ class SVGCanvas extends PureComponent {
         const y = pt.y;
         const mouseTarget = this.getMouseTarget(event);
         if (rightClick || event.ctrlKey || event.metaKey) {
+            // if (this.mode === 'draw') {
+            //     return;
+            // }
             draw.mode = this.mode;
             this.setMode('panMove');
         } else if (this.svgContentGroup.isElementOperator(mouseTarget)) {
@@ -1104,7 +1108,7 @@ class SVGCanvas extends PureComponent {
             }
 
             case 'panMove': {
-                if (!draw.moved) {
+                if (!draw.moved && draw.mode !== 'draw') {
                     this.onContextmenu(event);
                 }
                 this.props.updateTarget(this.target);
@@ -1112,7 +1116,7 @@ class SVGCanvas extends PureComponent {
                 return;
             }
             case 'draw': {
-                this.svgContentGroup.drawGroup.onMouseUp(x, y);
+                this.svgContentGroup.drawGroup.onMouseUp(event, x, y);
                 return;
             }
             default:
@@ -1229,8 +1233,8 @@ class SVGCanvas extends PureComponent {
             this.setMode('textedit');
         } else if (tagName === 'path' && mouseTarget.getAttribute('id')?.includes('graph')) {
             this.clearSelection();
-            this.svgContentGroup.drawGroup.startDraw(mouseTarget);
-            this.setMode('draw');
+            const svgModel = this.props.SVGActions.getSVGModelByElement(mouseTarget);
+            this.svgContentGroup.drawGroup.startDraw(mouseTarget, svgModel.transformation);
         }
     };
 

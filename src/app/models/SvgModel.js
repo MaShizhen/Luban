@@ -1,6 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
 import Canvg from 'canvg';
+import svgPath from 'svgpath';
 import { coordGmSvgToModel } from '../ui/SVGEditor/element-utils';
 
 import { NS } from '../ui/SVGEditor/lib/namespaces';
@@ -487,10 +488,7 @@ class SvgModel extends BaseModel {
                     const originY = elem.getAttribute('y');
 
                     if (originX && originY && (Number(originX) !== x || Number(originY) !== y)) {
-                        d = d.replace(/\d+\.*\d*\s+\d+\.*\d*/g, (coordinateString) => {
-                            const [currentX, currentY] = coordinateString.split(' ');
-                            return [Number(currentX) + x - Number(originX), Number(currentY) + y - Number(originY)].join(' ');
-                        });
+                        d = svgPath(d).translate(x - Number(originX), y - Number(originY)).toString();
                     }
                     elem.setAttribute('d', d);
                     elem.setAttribute('source', d);
@@ -765,10 +763,7 @@ class SvgModel extends BaseModel {
                 const originX = element.getAttribute('x');
                 const originY = element.getAttribute('y');
                 const d = element.getAttribute('source');
-                const newPath = d.replace(/\d+\.*\d*\s+\d+\.*\d*/g, (coordinateString) => {
-                    const [currentX, currentY] = coordinateString.split(' ');
-                    return [Number(currentX) + x - Number(originX), Number(currentY) + y - Number(originY)].join(' ');
-                });
+                const newPath = svgPath(d).translate(x - Number(originX), y - Number(originY)).toString();
                 element.setAttribute('d', newPath);
                 break;
             }
