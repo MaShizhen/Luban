@@ -158,10 +158,13 @@ class SVGCanvas extends PureComponent {
 
     callbacks = {};
 
+    svgSelector = null;
+
     componentDidMount() {
         this.setupSVGContainer();
         this.setupSVGBackground();
         this.setupSVGContent();
+        this.setupSVGSelector();
         this.setupMouseEvents();
         this.setupKeyEvents();
         this.setupPrintableArea();
@@ -343,6 +346,30 @@ class SVGCanvas extends PureComponent {
         };
     }
 
+    setupSVGSelector() {
+        this.svgSelector = document.createElementNS(NS.SVG, 'rect');
+        setAttributes(this.svgSelector, {
+            fill: 'red',
+            stroke: '#000',
+            'stroke-width': 0,
+            style: 'pointer-events: none'
+        });
+        this.svgContainer.append(this.svgSelector);
+    }
+
+    resetSVGSelector() {
+        setAttributes(this.svgSelector, {
+            fill: 'red',
+            stroke: '#000',
+            'stroke-width': 0,
+            style: 'pointer-events: none',
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0
+        });
+    }
+
     setupMouseEvents() {
         this.svgContainer.addEventListener('mousedown', this.onMouseDown, false);
         this.svgContainer.addEventListener('mousemove', this.onMouseMove, false);
@@ -466,6 +493,7 @@ class SVGCanvas extends PureComponent {
         }
         // hide left bar overlay
         this.props.hideLeftBarOverlay();
+        // console.log('--- onMouseDown', this.mode);
         switch (this.mode) {
             case 'select': {
                 if (mouseTarget && mouseTarget.parentNode.id === 'svg-data') {
@@ -748,6 +776,8 @@ class SVGCanvas extends PureComponent {
 
     onMouseMove = (event) => {
         const draw = this.currentDrawing;
+        // console.log('=== onMouseMove', this.mode, draw?.started);
+
         if (!draw.started) {
             return;
         }
@@ -762,6 +792,7 @@ class SVGCanvas extends PureComponent {
         if (!this.props.editable && ['move', 'resize', 'rotate'].includes(this.mode)) {
             return;
         }
+
         switch (this.mode) {
             case 'move': {
                 const dx = x - draw.startX;

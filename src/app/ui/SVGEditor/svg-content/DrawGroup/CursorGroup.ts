@@ -156,6 +156,8 @@ class CursorGroup {
             return;
         }
         if (x && y) {
+            console.log('cccccc', x, y);
+
             this.attachPoint.setAttribute('cx', (x + 22 / this.scale).toString());
             this.attachPoint.setAttribute('cy', (y + 14 / this.scale).toString());
             this.attachPoint.setAttribute('visibility', 'visible');

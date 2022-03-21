@@ -1,4 +1,5 @@
 import { v4 as uuid } from 'uuid';
+import { noop } from 'lodash';
 import { createSVGElement, getBBox, toString } from '../element-utils';
 import { NS } from '../lib/namespaces';
 // import SelectorManager from './SelectorManager';
@@ -15,19 +16,19 @@ class SVGContentGroup {
 
     drawGroup = null;
 
-    onChangeMode
+    onChangeMode = noop;
 
-    onDrawLine
+    onDrawLine = noop;
 
-    onDrawDelete
+    onDrawDelete = noop;
 
-    onDrawTransform
+    onDrawTransform = noop;
 
-    onDrawTransformComplete
+    onDrawTransformComplete = noop;
 
-    onDrawStart
+    onDrawStart = noop;
 
-    onDrawComplete
+    onDrawComplete = noop;
 
     constructor(options) {
         const { svgContent, scale } = options;

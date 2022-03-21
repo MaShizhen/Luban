@@ -1,4 +1,4 @@
-import { createSVGElement } from '../../element-utils';
+import { createSVGElement, setAttributes } from '../../element-utils';
 import { Mode, pointRadius, pointSize, pointWeight, TCoordinate, ThemeColor } from './constants';
 import { ControlPoint, EndPoint } from './Point';
 
@@ -9,7 +9,7 @@ class OperationGroup {
 
     public controlsArray: (ControlPoint | EndPoint)[] = [];
 
-    private lastControlsArray: (ControlPoint | EndPoint)[] = [];
+    public lastControlsArray: (ControlPoint | EndPoint)[] = [];
 
     public controlPoints: SVGGElement;
 
@@ -81,8 +81,8 @@ class OperationGroup {
             'is-controls': true
         };
         if (point instanceof EndPoint) {
-            attr.rx = (pointRadius / this.scale).toString();
-            attr.ry = (pointRadius / this.scale).toString();
+            attr.rx = `${pointRadius / this.scale}`;
+            attr.ry = `${pointRadius / this.scale}`;
         }
         return createSVGElement({
             element: 'rect',
@@ -91,61 +91,52 @@ class OperationGroup {
     }
 
     private renderCurve(curveData: [TCoordinate, TCoordinate, TCoordinate]) {
-        const d = `M ${curveData[0].join(' ')} Q ${curveData[1].join(' ')}, ${curveData[2].join(' ')}`;
+        const d = curveData.length === 3 ? `M ${curveData[0].join(' ')} Q ${curveData[1].join(' ')}, ${curveData[2].join(' ')}` : `M ${curveData[0].join(' ')} L ${curveData[1].join(' ')}`;
         this.previewLine.setAttribute('visibility', 'visible');
         this.previewLine.setAttribute('d', d);
     }
 
-    private renderControlPoints(controlPointData: ControlPoint[]) {
-        controlPointData.forEach((item, index) => {
+    private renderPoints(pointData: Array<ControlPoint | EndPoint>) {
+        pointData.forEach((item, index) => {
             const elem = this.controlPoints.children[index];
             if (elem) {
-                elem.setAttribute('x', (item.x - pointRadius / this.scale).toString());
-                elem.setAttribute('y', (item.y - pointRadius / this.scale).toString());
-                elem.setAttribute('rx', '0');
-                elem.setAttribute('ry', '0');
-                elem.setAttribute('visibility', 'visible');
+                setAttributes(elem, {
+                    x: `${item.x - pointRadius / this.scale}`,
+                    y: `${item.y - pointRadius / this.scale}`,
+                    rx: item instanceof ControlPoint ? '0' : `${pointRadius / this.scale}`,
+                    ry: item instanceof ControlPoint ? '0' : `${pointRadius / this.scale}`,
+                    visibility: 'visible',
+                });
             } else {
                 this.controlPoints.append(this.createPoint(item));
             }
         });
-        Array(this.controlPoints.childElementCount - controlPointData.length).fill('').forEach((_, index) => {
-            this.controlPoints.children[this.controlPoints.childElementCount - index - 1].setAttribute('visibility', 'hidden');
-        });
-    }
-
-    private renderEndPoints() {
-        const firstEndPoint = this.controlsArray[0] as EndPoint;
-        const elem = this.controlPoints.firstElementChild;
-        if (elem) {
-            elem.setAttribute('x', (firstEndPoint.x - pointRadius / this.scale).toString());
-            elem.setAttribute('y', (firstEndPoint.y - pointRadius / this.scale).toString());
-            elem.setAttribute('rx', (pointRadius / this.scale).toString());
-            elem.setAttribute('ry', (pointRadius / this.scale).toString());
-            elem.setAttribute('visibility', 'visible');
-
-            Array.from(this.controlPoints.children).forEach((child, index) => {
-                if (index !== 0) {
-                    child.setAttribute('visibility', 'hidden');
-                }
+        Array(this.controlPoints.childElementCount - pointData.length).fill('').forEach((_, index) => {
+            setAttributes(this.controlPoints.children[this.controlPoints.childElementCount - index - 1], {
+                visibility: 'hidden',
+                x: 0,
+                y: 0
             });
-        } else {
-            this.controlPoints.append(this.createPoint(firstEndPoint));
-        }
+        });
     }
 
     private renderControlLines(lineEndPoints: Array<[TCoordinate, TCoordinate]>) {
         lineEndPoints.forEach((item, index) => {
             const elem = this.connectLines.children[index];
             if (elem) {
-                elem.setAttribute('d', `M ${item[0].join(' ')} L ${item[1].join(' ')} Z`);
-                elem.setAttribute('visibility', 'visible');
+                setAttributes(elem, {
+                    visibility: 'visible',
+                    d: `M ${item[0].join(' ')} L ${item[1].join(' ')} Z`
+                });
             } else {
                 this.connectLines.append(this.createLine(item[0], item[1]));
             }
         });
         Array(this.connectLines.childElementCount - lineEndPoints.length).fill('').forEach((_, index) => {
-            this.connectLines.children[this.connectLines.childElementCount - index - 1].setAttribute('visibility', 'hidden');
+            setAttributes(this.connectLines.children[this.connectLines.childElementCount - index - 1], {
+                visibility: 'hidden',
+                d: ''
+            });
         });
     }
 
@@ -153,21 +144,35 @@ class OperationGroup {
         if (controlsArray.length === 0) {
             return;
         }
-        const controlPointData = [];
+        const pointRadiusWithScale = pointRadius / this.scale;
+
+        const pointData = [];
         const curveData = [] as unknown as [TCoordinate, TCoordinate, TCoordinate];
         const lineEndPoints = controlsArray.reduce((p, item, index) => {
             // render end points
-            if (item instanceof ControlPoint) {
-                controlPointData.push(item);
-                const a = controlsArray[index - 1];
-                const b = controlsArray[index + 1];
-                if (this.mode === Mode.DRAW && a && b) {
-                    curveData.push([a.x, a.y], [item.x, item.y], [b.x, b.y]);
+            if (item instanceof EndPoint) {
+                const circle = Array.from(document.querySelectorAll<SVGRectElement>('rect[type="end-point"]')).find(elem => {
+                    return elem.getAttribute('x') === `${item.x - pointRadiusWithScale}` && elem.getAttribute('y') === `${item.y - pointRadiusWithScale}`;
+                });
+                !circle && pointData.push(item);
+            } else {
+                pointData.push(item);
+            }
+
+            if (this.mode === Mode.DRAW) {
+                if (item instanceof ControlPoint) {
+                    const a = controlsArray[index - 1];
+                    const b = controlsArray[index + 1];
+                    a && b && curveData.push([a.x, a.y], [item.x, item.y], [b.x, b.y]);
+                } else {
+                    const b = controlsArray[index + 1];
+                    b && curveData.push([item.x, item.y], [b.x, b.y]);
                 }
             }
+
             // generate line's endpoints
             const next = controlsArray[index + 1];
-            if (next && !(item instanceof ControlPoint && next instanceof ControlPoint)) {
+            if (next && !(item instanceof ControlPoint && next instanceof ControlPoint) && !(item instanceof EndPoint && next instanceof EndPoint)) {
                 p.push([
                     [item.x, item.y], [next.x, next.y]
                 ]);
@@ -178,22 +183,18 @@ class OperationGroup {
         lastControlsArray && lastControlsArray.forEach((item, index) => {
             // generate line's endpoints
             const next = lastControlsArray[index + 1];
-            if (next && !(item instanceof ControlPoint && next instanceof ControlPoint)) {
+            if (next && !(item instanceof ControlPoint && next instanceof ControlPoint) && !(item instanceof EndPoint && next instanceof EndPoint)) {
                 lineEndPoints.push([
                     [item.x, item.y], [next.x, next.y]
                 ]);
             }
             if (item instanceof ControlPoint) {
-                controlPointData.push(item);
+                pointData.push(item);
             }
         });
 
         lineEndPoints.length > 0 && this.renderControlLines(lineEndPoints);
-        if (controlPointData.length > 0) {
-            this.renderControlPoints(controlPointData);
-        } else {
-            this.renderEndPoints();
-        }
+        this.renderPoints(pointData);
         curveData.length > 0 && this.renderCurve(curveData);
     }
 
@@ -213,7 +214,7 @@ class OperationGroup {
         this.updateControlsLine(this.controlsArray);
     }
 
-    private parseLine(elem: SVGPathElement): Array<(EndPoint|ControlPoint)> {
+    private parseLine(elem: SVGPathElement): Array<(EndPoint | ControlPoint)> {
         const controlsArray = [];
         const d = elem.getAttribute('d');
         const res: string[] = d.match(/\d+\.*\d*/g);
@@ -253,24 +254,34 @@ class OperationGroup {
         if (this.controlsArray.length > 0) {
             const lasetPoint = this.controlsArray[this.controlsArray.length - 1];
             if (lasetPoint.x === x && lasetPoint.y === y) {
-                return;
+                return false;
             }
             if (lasetPoint instanceof ControlPoint) {
                 const lasetEndPoint = this.controlsArray[this.controlsArray.length - 2];
                 if (lasetEndPoint.x === x && lasetEndPoint.y === y) {
-                    return;
+                    return false;
                 }
             }
         }
         const point = new EndPoint(x, y);
 
         this.setControlsArray(point);
+        return true;
     }
 
-    public updateOperation(elem: SVGPathElement) {
-        this.controlsArray = this.parseLine(elem);
-
-        this.updateControlsLine(this.controlsArray);
+    public updateOperation(elem: SVGPathElement | SVGPathElement[]) {
+        if (Array.isArray(elem)) {
+            const points = elem.map(item => {
+                return this.parseLine(item);
+            }).reduce((p, c) => {
+                p.push(...c);
+                return p;
+            }, []);
+            this.updateControlsLine(points);
+        } else {
+            this.controlsArray = this.parseLine(elem);
+            this.updateControlsLine(this.controlsArray);
+        }
     }
 
     private calcSymmetryPoint([x, y]: TCoordinate, [x1, y1]: TCoordinate): TCoordinate {
@@ -279,10 +290,6 @@ class OperationGroup {
 
     public updatePrviewByCursor(cursorPoint: ControlPoint | EndPoint) {
         if (this.controlsArray.length === 0 || this.mode !== Mode.DRAW) {
-            return;
-        }
-        const lasetEndPoint = this.controlsArray[this.controlsArray.length - 1];
-        if (Math.abs(lasetEndPoint.x - cursorPoint.x) <= minimumSpacing && Math.abs(lasetEndPoint.y - cursorPoint.y) <= minimumSpacing) {
             return;
         }
 
@@ -318,23 +325,23 @@ class OperationGroup {
         this.scale = scale;
 
         Array.from(this.controlPoints.children).forEach(elem => {
-            elem.setAttribute('width', (pointSize / this.scale).toString());
-            elem.setAttribute('height', (pointSize / this.scale).toString());
-            elem.setAttribute('stroke-width', (1 / this.scale).toString());
+            elem.setAttribute('width', `${pointSize / this.scale}`);
+            elem.setAttribute('height', `${pointSize / this.scale}`);
+            elem.setAttribute('stroke-width', `${1 / this.scale}`);
 
             const rx = elem.getAttribute('rx');
             const ry = elem.getAttribute('ry');
             if (rx && ry) {
-                elem.setAttribute('rx', (pointRadius / this.scale).toString());
-                elem.setAttribute('ry', (pointRadius / this.scale).toString());
+                elem.setAttribute('rx', `${pointRadius / this.scale}`);
+                elem.setAttribute('ry', `${pointRadius / this.scale}`);
             }
         });
 
         Array.from(this.connectLines.children).forEach(elem => {
-            elem.setAttribute('stroke-width', (1 / this.scale).toString());
+            elem.setAttribute('stroke-width', `${1 / this.scale}`);
         });
 
-        this.previewLine.setAttribute('stroke-width', (1 / this.scale).toString());
+        this.previewLine.setAttribute('stroke-width', `${1 / this.scale}`);
     }
 }
 
