@@ -2,7 +2,7 @@ import { createSVGElement } from '../../element-utils';
 import { Mode, AttachPointRadius, pointRadius, pointSize, pointWeight, ThemeColor, TCoordinate } from './constants';
 
 
-const cursorWidth = 120;
+const cursorWidth = 100;
 
 class CursorGroup {
     public mode: Mode;
@@ -139,8 +139,8 @@ class CursorGroup {
         }
 
         this.cursorPoint.setAttribute('fill', '');
-        this.cursor.setAttribute('x', (x - 13.5 / this.scale).toString());
-        this.cursor.setAttribute('y', (y - 8 / this.scale).toString());
+        this.cursor.setAttribute('x', (x - 11.5 / this.scale).toString());
+        this.cursor.setAttribute('y', (y - 7 / this.scale).toString());
     }
 
     public toogleVisible(visible: boolean) {
@@ -156,7 +156,7 @@ class CursorGroup {
             return;
         }
         if (x && y) {
-            this.attachPoint.setAttribute('cx', (x + 26 / this.scale).toString());
+            this.attachPoint.setAttribute('cx', (x + 22 / this.scale).toString());
             this.attachPoint.setAttribute('cy', (y + 14 / this.scale).toString());
             this.attachPoint.setAttribute('visibility', 'visible');
 

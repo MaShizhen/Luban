@@ -3,8 +3,8 @@ import { cloneDeep } from 'lodash';
 import svgPath from 'svgpath';
 import SvgModel from '../../../../models/SvgModel';
 import { createSVGElement } from '../../element-utils';
-import { ThemeColor, attachSpace, Mode, pointRadius } from './constants';
-import { Point, EndPoint, ControlPoint } from './Point';
+import { ThemeColor, attachSpace, Mode, pointRadius, TCoordinate } from './constants';
+import { EndPoint, ControlPoint } from './Point';
 import Line from './Line';
 import OperationGroup from './OperationGroup';
 import CursorGroup from './CursorGroup';
@@ -12,7 +12,7 @@ import { ModelTransformation } from '../../../../models/BaseModel';
 
 export type TransformRecord = {
     line: Line,
-    points: Point[]
+    points: TCoordinate[]
 }
 
 class DrawGroup {
@@ -24,7 +24,7 @@ class DrawGroup {
 
     private cursorGroup: CursorGroup;
 
-    private cursorPosition: Point
+    private cursorPosition: TCoordinate
 
     private operationGroup: OperationGroup;
 
@@ -218,6 +218,8 @@ class DrawGroup {
     private applyTransform(d: string, restore?: boolean) {
         const config = this.originTransformation;
         const { scaleX, scaleY, rotationZ } = config;
+        console.log({ scaleX, scaleY });
+
         const angle = rotationZ * 180 / Math.PI;
 
         if (restore) {
@@ -228,7 +230,7 @@ class DrawGroup {
             return svgPath(d)
                 .translate(-cx, -cy)
                 .rotate(angle)
-                .scale(scaleX, scaleY)
+                .scale(1 / scaleX, 1 / scaleY)
                 .translate(cx, cy);
         } else {
             const transform = this.originGraph.getAttribute('transform');
@@ -243,8 +245,8 @@ class DrawGroup {
             const arr = cloneDeep(segment);
             const mark = arr.shift();
 
-            if (mark !== 'M') {
-                const points: Point[] = [];
+            if (mark !== 'M' && mark !== 'Z') {
+                const points: TCoordinate[] = [];
                 for (let index = 0; index < arr.length; index += 2) {
                     points.push([
                         Number(arr[index]),
@@ -259,7 +261,7 @@ class DrawGroup {
         });
     }
 
-    public appendLine(data: Point[] | SVGPathElement) {
+    public appendLine(data: TCoordinate[] | SVGPathElement) {
         const line = new Line(data, this.scale);
         this.drawedLine.push(line);
 
@@ -448,16 +450,8 @@ class DrawGroup {
                 this.afterTransform = this.recordTransform();
                 this.onDrawTransform({ before: this.beforeTransform, after: this.afterTransform });
             }
-            this.calculateConnection();
             this.setGuideLineVisibility(false);
         }
-    }
-
-    private calculateConnection() {
-        this.drawedLine.forEach(line => {
-            line.EndPointsEle = [];
-            line.generateEndPointEle();
-        });
     }
 
     private setGuideLineVisibility(visible: boolean) {
@@ -469,9 +463,9 @@ class DrawGroup {
         this.setGuideLineVisibility(false);
 
         let min: number = this.attachSpace;
-        let attachPosition: Point;
-        let guideX: Point;
-        let guideY: Point;
+        let attachPosition: TCoordinate;
+        let guideX: TCoordinate;
+        let guideY: TCoordinate;
         this.drawedLine.forEach((line) => {
             const selfIndex = line.EndPointsEle.findIndex(elem => elem === this.selected.point);
             line.EndPoins.forEach((p, index) => {
@@ -496,7 +490,7 @@ class DrawGroup {
         });
 
         this.operationGroup.controlsArray.forEach(item => {
-            const p: Point = [item.x, item.y];
+            const p: TCoordinate = [item.x, item.y];
             if (Math.abs(x - p[0]) <= this.attachSpace) {
                 guideX = p;
             }
@@ -645,7 +639,7 @@ class DrawGroup {
                 return;
             }
             // move controls points
-            if (leftKeyPressed && this.selected.point) {
+            if (leftKeyPressed && this.selected.line && this.selected.point) {
                 this.transformOperatingPoint([x, y]);
                 this.operationGroup.updateOperation(this.selected.line.elem);
                 return;

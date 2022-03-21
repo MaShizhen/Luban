@@ -1,11 +1,10 @@
 import { createSVGElement } from '../../element-utils';
-import { pointRadius, pointSize, ThemeColor } from './constants';
-import { Point } from './Point';
+import { pointRadius, pointSize, ThemeColor, TCoordinate } from './constants';
 
 class Line {
-    public points: Point[];
+    public points: TCoordinate[];
 
-    public EndPoins: Point[];
+    public EndPoins: TCoordinate[];
 
     public EndPointsEle: SVGRectElement[] = [];
 
@@ -13,7 +12,7 @@ class Line {
 
     private scale: number;
 
-    constructor(data: Point[] | SVGPathElement, scale: number) {
+    constructor(data: TCoordinate[] | SVGPathElement, scale: number) {
         this.scale = scale;
 
         if (data instanceof SVGPathElement) {
@@ -40,7 +39,7 @@ class Line {
         this.generateEndPointEle();
     }
 
-    public updatePosition(points?: Point[]) {
+    public updatePosition(points?: TCoordinate[]) {
         if (points) {
             this.elem.setAttribute('d', this.generatePath(points));
         }
@@ -62,7 +61,7 @@ class Line {
         return points;
     }
 
-    private updateEndPointEle(point?: Point[]) {
+    private updateEndPointEle(point?: TCoordinate[]) {
         if (point) {
             const EndPoins = point ? [
                 point[0],
@@ -80,10 +79,11 @@ class Line {
                 this.points[0],
                 this.points[this.points.length - 1]
             ];
+            this.updateEndPointEle(points);
         }
     }
 
-    public generatePath(points: Point[]) {
+    public generatePath(points: TCoordinate[]) {
         const length = points.length;
         switch (length) {
             case 2:
@@ -100,6 +100,10 @@ class Line {
     public generateEndPointEle() {
         const pointRadiusWithScale = pointRadius / this.scale;
         this.EndPoins.forEach((item) => {
+            if (!item || !item[0]) {
+                // eslint-disable-next-line
+                debugger;
+            }
             const circle = Array.from(document.querySelectorAll<SVGRectElement>('rect[type="end-point"]')).find(elem => {
                 return elem.getAttribute('x') === (item[0] - pointRadiusWithScale).toString() && elem.getAttribute('y') === (item[1] - pointRadiusWithScale).toString();
             }) || createSVGElement({
@@ -123,12 +127,12 @@ class Line {
         });
     }
 
-    private calcSymmetryPoint([x, y]: Point, [x1, y1]: Point): Point {
+    private calcSymmetryPoint([x, y]: TCoordinate, [x1, y1]: TCoordinate): TCoordinate {
         return [2 * x1 - x, 2 * y1 - y];
     }
 
     public redrawCurve(x: number, y: number) {
-        let points: Point[];
+        let points: TCoordinate[];
         if (this.points.length === 2) {
             const p = this.calcSymmetryPoint([x, y], this.points[1]);
             points = [this.points[0], p, this.points[1]];

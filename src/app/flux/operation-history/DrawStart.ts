@@ -2,7 +2,7 @@ import type ContentGroup from '../../ui/SVGEditor/svg-content/SVGContentGroup';
 import Operation from './Operation';
 
 type DrawStartProp = {
-    elem: string;
+    elem: SVGPathElement;
     contentGroup: ContentGroup;
 }
 
@@ -17,7 +17,6 @@ export default class DrawStart extends Operation<DrawStartProp> {
 
     public redo() {
         this.state.contentGroup.drawGroup.stopDraw(true);
-        // this.state.contentGroup.onChangeMode('draw');
         this.state.contentGroup.drawGroup.startDraw(this.state.elem);
     }
 

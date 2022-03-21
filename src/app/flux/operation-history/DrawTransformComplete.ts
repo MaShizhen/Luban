@@ -23,11 +23,8 @@ export default class DrawTransformComplete extends Operation<DrawTransformComple
         this.state.elem.setAttribute('d', this.state.after);
         this.state.elem.setAttribute('source', this.state.after);
         const { x, y, width, height } = this.state.elem.getBBox();
-        this.state.elem.setAttribute('x', (x + width / 2).toString());
-        this.state.elem.setAttribute('y', (y + height / 2).toString());
-
-
-        // this.getSVGModelByElement(element).onTransform();
+        this.state.elem.setAttribute('x', `${x + width / 2}`);
+        this.state.elem.setAttribute('y', `${y + height / 2}`);
     }
 
     public undo() {
@@ -36,7 +33,5 @@ export default class DrawTransformComplete extends Operation<DrawTransformComple
         const { x, y, width, height } = this.state.elem.getBBox();
         this.state.elem.setAttribute('x', (x + width / 2).toString());
         this.state.elem.setAttribute('y', (y + height / 2).toString());
-
-        // this.getSVGModelByElement(element).onTransform();
     }
 }

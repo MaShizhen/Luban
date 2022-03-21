@@ -586,7 +586,6 @@ export const actions = {
      * @param modelID - optional, used in project recovery
      */
     generateModel: (headType, { originalName, uploadName, sourceWidth, sourceHeight, mode, sourceType, config, gcodeConfig, transformation, modelID, zIndex, isLimit }) => (dispatch, getState) => {
-        console.log('>> generateModel');
         const { size } = getState().machine;
         const { materials, modelGroup, SVGActions, contentGroup, toolPathGroup, coordinateMode, coordinateSize } = getState()[headType];
         sourceType = sourceType || getSourceType(originalName);
@@ -2142,7 +2141,7 @@ export const actions = {
     },
     drawTransformComplete: (headType, elem, before, after) => (dispatch, getState) => {
         const { contentGroup, history, SVGActions } = getState()[headType];
-        dispatch(operationHistoryActions.clearDrawOperations(headType));
+        history.clearDrawOperations();
         if (before !== after) {
             const operations = new Operations();
             const operation = new DrawTransformComplete({
@@ -2175,17 +2174,18 @@ export const actions = {
         });
         operations.push(operation);
         history.push(operations);
-
-        // operations.undoCallback = () => {
-        //     dispatch(operationHistoryActions.clearDrawOperations(headType, true));
-        // };
         dispatch(actions.updateState(headType, {
             history
         }));
     },
-    drawComplete: (headType, elem) => (dispatch) => {
+    drawComplete: (headType, elem) => (dispatch, getState) => {
+        const { history } = getState()[headType];
+
         if (elem) {
-            dispatch(operationHistoryActions.clearDrawOperations(headType));
+            history.clearDrawOperations();
+            dispatch(actions.updateState(headType, {
+                history
+            }));
             dispatch(actions.createModelFromElement(headType, elem, true));
         }
     }

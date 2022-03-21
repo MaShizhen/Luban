@@ -121,6 +121,7 @@ class SVGLeftBar extends PureComponent {
                                     color="#545659"
                                     type={[`${mode === 'draw' ? 'hoverNoBackground' : 'hoverNormal'}`, 'pressSpecial']}
                                     size={48}
+                                    // name="ToolbarPen"
                                     name="ToolbarMirror"
                                     disabled={!editable}
                                     className={
@@ -195,25 +196,23 @@ class SVGLeftBar extends PureComponent {
                     {
                         mode === 'draw' && (
                             <div
-                                className="position-ab width-272 margin-left-72 margin-top-112 border-default-grey-1 border-radius-8 background-color-white"
+                                className="position-ab width-152 margin-left-72 margin-top-112 border-default-grey-1 border-radius-8 background-color-white"
                             >
                                 <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
                                     Pen
                                 </div>
-                                <div>
-                                    <div className="sm-flex">
-                                        <Anchor
-                                            onClick={() => {
-                                                this.actions.stopDraw();
-                                            }}
+                                <div className={classNames(styles['center-pen'], 'width-152')}>
+                                    <Anchor
+                                        onClick={() => {
+                                            this.actions.stopDraw();
+                                        }}
+                                    >
+                                        <div
+                                            className={classNames('width-120', styles['center-pen-done'])}
                                         >
-                                            <div
-                                                className={classNames(styles['center-ext'])}
-                                            >
-                                                <div>done</div>
-                                            </div>
-                                        </Anchor>
-                                    </div>
+                                            <span>Done</span>
+                                        </div>
+                                    </Anchor>
                                 </div>
                             </div>
                         )

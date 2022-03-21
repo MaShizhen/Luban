@@ -2,10 +2,6 @@ import { baseActions as editorBaseActions } from '../editor/actions-base';
 import { baseActions as printingBaseActions } from '../printing/actions-base';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
-import DrawDelete from './DrawDelete';
-import DrawLine from './DrawLine';
-import DrawStart from './DrawStart';
-import DrawTransform from './DrawTransform';
 
 const updateState = (headType, state) => {
     if (headType === 'printing') {
@@ -41,21 +37,6 @@ export const actions = {
             }));
         }
         dispatch(projectActions.autoSaveEnvironment(headType));
-    },
-    isDrawOperation(operation) {
-        return operation instanceof DrawLine || operation instanceof DrawDelete || operation instanceof DrawTransform || operation instanceof DrawStart;
-    },
-    clearDrawOperations: (headType, keeyDrawStart) => (dispatch, getState) => {
-        const { history } = getState()[headType];
-        history.history = history.history.filter((item) => {
-            return !item.operations.some(i => {
-                return i instanceof DrawLine || i instanceof DrawDelete || i instanceof DrawTransform || (!keeyDrawStart && i instanceof DrawStart);
-            });
-        });
-        history.index = history.history.length - 1;
-        dispatch(updateState(headType, {
-            history
-        }));
     },
     clear: (headType) => (dispatch, getState) => {
         const history = getState()[headType]?.history;

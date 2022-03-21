@@ -17,6 +17,18 @@ class SVGContentGroup {
 
     onChangeMode
 
+    onDrawLine
+
+    onDrawDelete
+
+    onDrawTransform
+
+    onDrawTransformComplete
+
+    onDrawStart
+
+    onDrawComplete
+
     constructor(options) {
         const { svgContent, scale } = options;
 

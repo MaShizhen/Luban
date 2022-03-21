@@ -1,5 +1,3 @@
-export type Point = [number, number]
-
 export class EndPoint {
     public x: number
 

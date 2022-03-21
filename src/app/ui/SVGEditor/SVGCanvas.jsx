@@ -466,7 +466,6 @@ class SVGCanvas extends PureComponent {
         }
         // hide left bar overlay
         this.props.hideLeftBarOverlay();
-
         switch (this.mode) {
             case 'select': {
                 if (mouseTarget && mouseTarget.parentNode.id === 'svg-data') {

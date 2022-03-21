@@ -8,9 +8,9 @@ export enum Mode {
     SELECT
 }
 
-export const pointSize = 12;
+export const pointSize = 10;
 export const pointRadius = pointSize / 2;
-export const AttachPointRadius = 4;
+export const AttachPointRadius = 3.2;
 export const pointWeight = 1;
 
 export type TCoordinate = [number, number];
