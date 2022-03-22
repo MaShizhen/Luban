@@ -348,20 +348,7 @@ class SVGCanvas extends PureComponent {
     }
 
     setupSVGSelector() {
-        this.svgSelector = new SVGSelector(this.svgContainer);
-    }
-
-    resetSVGSelector() {
-        setAttributes(this.svgSelector, {
-            fill: 'red',
-            stroke: '#000',
-            'stroke-width': 0,
-            style: 'pointer-events: none',
-            x: 0,
-            y: 0,
-            width: 0,
-            height: 0
-        });
+        this.svgSelector = new SVGSelector(this.svgContent, this.scale);
     }
 
     setupMouseEvents() {
@@ -391,6 +378,7 @@ class SVGCanvas extends PureComponent {
     }
 
     setMode(mode, extShape) {
+        this.svgSelector.setVisible(mode === 'select');
         if (mode === 'select') {
             jQuery(this.svgContainer).css('cursor', 'auto');
         } else if (mode === 'draw') {
@@ -778,6 +766,7 @@ class SVGCanvas extends PureComponent {
         const y = pt.y;
 
         if (this.mode === 'select' && event.which === 1) {
+            console.log(x, y);
             this.svgSelector.update(x, y);
         }
 
@@ -1394,6 +1383,7 @@ class SVGCanvas extends PureComponent {
 
         this.printableArea.updateScale({ size: size, materials: materials, scale: this.scale });
         this.svgContentGroup.updateScale(this.scale);
+        this.svgSelector.updateScale(this.scale);
     };
 
 

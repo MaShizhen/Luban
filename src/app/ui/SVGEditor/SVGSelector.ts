@@ -11,8 +11,10 @@ class SVGSelector {
 
     private elem: SVGRectElement;
 
+    public scale: number;
 
-    constructor(contentGroup: SVGGElement) {
+    constructor(contentGroup: SVGGElement, scale:number) {
+        this.scale = scale;
         this.elem = createSVGElement({
             element: 'rect',
             attr: {
@@ -28,26 +30,33 @@ class SVGSelector {
     }
 
     private update(x: number, y: number) {
-        if (x > this.x) {
-            x = this.x;
-            y = this.y;
-        }
         this.width = Math.abs(x - this.x);
         this.height = Math.abs(y - this.y);
+
         setAttributes(this.elem, {
-            x,
-            y,
+            x: Math.min(this.x, x),
+            y: Math.min(this.y, y),
             width: this.width,
             height: this.height
         });
     }
 
     public reset(x: number, y: number) {
-        this.y = x;
+        this.x = x;
         this.y = y;
-        this.width = 0;
-        this.height = 0;
-        this.update(0, 0);
+        this.update(x, y);
+    }
+
+    public updateScale(scale:number) {
+        this.scale = scale;
+    }
+
+    public setVisible(visible: boolean) {
+        console.log(visible);
+
+        // this.elem.setAttribute('visibility', visible ? 'visible' : 'hidden');
+        this.elem.setAttribute('visibility', 'hidden');
+        this.update(-1, -1);
     }
 }
 

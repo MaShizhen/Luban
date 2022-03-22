@@ -1,3 +1,4 @@
+import { Bezier } from 'bezier-js';
 import { createSVGElement } from '../../element-utils';
 import { pointRadius, pointSize, ThemeColor, TCoordinate } from './constants';
 
@@ -13,6 +14,8 @@ class Line {
     public closedLoop: boolean;
 
     private scale: number;
+
+    private model : Bezier;
 
     constructor(data: TCoordinate[] | SVGPathElement, scale: number, closedLoop = false) {
         this.scale = scale;
@@ -40,6 +43,17 @@ class Line {
             this.points[this.points.length - 1]
         ];
         this.generateEndPointEle();
+        this.updateModel(this.points);
+    }
+
+    private updateModel(points: TCoordinate[]) {
+        const params = points.map(item => {
+            return {
+                x: item[0],
+                y: item[1]
+            };
+        }, []);
+        this.model = new Bezier(params);
     }
 
     public updatePosition(points?: TCoordinate[], applyMerge?: boolean) {
@@ -94,6 +108,7 @@ class Line {
                 this.points[0],
                 this.points[this.points.length - 1]
             ];
+            this.updateModel(_points);
             this.updateEndPointEle(_points, applyMerge);
         }
     }
@@ -179,6 +194,14 @@ class Line {
             elem.setAttribute('y', `${item[1] - pointRadiusWithScale}`);
             elem.setAttribute('stroke-width', `${1 / scale}`);
         });
+    }
+
+    public distanceDetection(x: number, y: number) {
+        const nearestPoint = this.model.project({ x, y });
+
+        const a = nearestPoint.x - x;
+        const b = nearestPoint.y - y;
+        return Math.sqrt(a * a + b * b);
     }
 }
 
