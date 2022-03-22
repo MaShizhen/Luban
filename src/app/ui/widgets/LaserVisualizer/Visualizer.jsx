@@ -312,8 +312,8 @@ class Visualizer extends Component {
                 this.actions.onClickToUpload();
             }
         },
-        onDrawLine: (line) => {
-            this.props.onDrawLine(line);
+        onDrawLine: (line, closedLoop) => {
+            this.props.onDrawLine(line, closedLoop);
         },
         onDrawDelete: (lines) => {
             this.props.onDrawDelete(lines);
@@ -765,7 +765,7 @@ const mapDispatchToProps = (dispatch) => {
         cutModel: (file, onFailure) => dispatch(editorActions.cutModel('laser', file, onFailure)),
         switchToPage: (page) => dispatch(editorActions.switchToPage('laser', page)),
 
-        onDrawLine: (line) => dispatch(editorActions.drawLine('laser', line)),
+        onDrawLine: (line, closedLoop) => dispatch(editorActions.drawLine('laser', line, closedLoop)),
         onDrawDelete: (lines) => dispatch(editorActions.drawDelete('laser', lines)),
         onDrawTransform: (before, after) => dispatch(editorActions.drawTransform('laser', before, after)),
         onDrawTransformComplete: (elem, before, after) => dispatch(editorActions.drawTransformComplete('laser', elem, before, after)),

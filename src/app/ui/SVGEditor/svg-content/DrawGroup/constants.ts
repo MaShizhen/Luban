@@ -1,6 +1,6 @@
 export const ThemeColor = '#1890ff';
 
-export const attachSpace = 20;
+export const attachSpace = 8;
 
 export enum Mode {
     NONE,

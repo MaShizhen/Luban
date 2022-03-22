@@ -2092,12 +2092,13 @@ export const actions = {
         }));
     },
 
-    drawLine: (headType, line) => (dispatch, getState) => {
+    drawLine: (headType, line, closedLoop) => (dispatch, getState) => {
         const { contentGroup, history } = getState()[headType];
 
         const operations = new Operations();
         const operation = new DrawLine({
             target: line,
+            closedLoop,
             drawGroup: contentGroup.drawGroup
         });
         operations.push(operation);

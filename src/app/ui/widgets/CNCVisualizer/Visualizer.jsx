@@ -292,8 +292,8 @@ class Visualizer extends Component {
                 this.actions.onClickToUpload();
             }
         },
-        onDrawLine: (line) => {
-            this.props.onDrawLine(line);
+        onDrawLine: (line, closedLoop) => {
+            this.props.onDrawLine(line, closedLoop);
         },
         onDrawDelete: (lines) => {
             this.props.onDrawDelete(lines);
@@ -753,7 +753,7 @@ const mapDispatchToProps = (dispatch) => {
         switchToPage: (page) => dispatch(editorActions.switchToPage('cnc', page)),
         checkIsOversizeImage: (file, onFailure) => dispatch(editorActions.checkIsOversizeImage('cnc', file, onFailure)),
 
-        onDrawLine: (line) => dispatch(editorActions.drawLine('cnc', line)),
+        onDrawLine: (line, closedLoop) => dispatch(editorActions.drawLine('cnc', line, closedLoop)),
         onDrawDelete: (lines) => dispatch(editorActions.drawDelete('cnc', lines)),
         onDrawTransform: (before, after) => dispatch(editorActions.drawTransform('cnc', before, after)),
         onDrawTransformComplete: (elem, before, after) => dispatch(editorActions.drawTransformComplete('cnc', elem, before, after)),

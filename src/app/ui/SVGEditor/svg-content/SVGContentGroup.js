@@ -63,8 +63,8 @@ class SVGContentGroup {
 
         this.drawGroup = new DrawGroup(this.group, this.scale);
 
-        this.drawGroup.onDrawLine = (line) => {
-            this.onDrawLine(line);
+        this.drawGroup.onDrawLine = (line, closedLoop) => {
+            this.onDrawLine(line, closedLoop);
         };
         this.drawGroup.onDrawDelete = (lines) => {
             this.onDrawDelete(lines);

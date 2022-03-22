@@ -10,10 +10,13 @@ class Line {
 
     public elem: SVGPathElement;
 
+    public closedLoop: boolean;
+
     private scale: number;
 
-    constructor(data: TCoordinate[] | SVGPathElement, scale: number) {
+    constructor(data: TCoordinate[] | SVGPathElement, scale: number, closedLoop = false) {
         this.scale = scale;
+        this.closedLoop = closedLoop;
 
         if (data instanceof SVGPathElement) {
             this.elem = data;
@@ -39,11 +42,11 @@ class Line {
         this.generateEndPointEle();
     }
 
-    public updatePosition(points?: TCoordinate[]) {
-        if (points) {
+    public updatePosition(points?: TCoordinate[], applyMerge?: boolean) {
+        if (points && points.length > 0) {
             this.elem.setAttribute('d', this.generatePath(points));
         }
-        this.updateEndPointEle(points);
+        this.updateEndPointEle(points, applyMerge);
     }
 
     private parsePoints() {
@@ -61,25 +64,37 @@ class Line {
         return points;
     }
 
-    private updateEndPointEle(point?: TCoordinate[]) {
-        if (point) {
-            const EndPoins = point ? [
-                point[0],
-                point[point.length - 1]
+    private updateEndPointEle(points?: TCoordinate[], applyMerge?: boolean) {
+        if (points && points.length > 0) {
+            const EndPoins = points ? [
+                points[0],
+                points[points.length - 1]
             ] : this.EndPoins;
 
             EndPoins.forEach((item, index) => {
-                this.EndPointsEle[index].setAttribute('x', (item[0] - pointRadius / this.scale).toString());
-                this.EndPointsEle[index].setAttribute('y', (item[1] - pointRadius / this.scale).toString());
+                const x = item[0] - pointRadius / this.scale;
+                const y = item[1] - pointRadius / this.scale;
+                if (applyMerge) {
+                    const circle = document.querySelector<SVGRectElement>(`rect[type="end-point"][x="${x}"][y="${y}"]`);
+                    if (circle) {
+                        if (circle !== this.EndPointsEle[index]) {
+                            this.EndPointsEle[index].remove();
+                            this.EndPointsEle[index] = circle;
+                        }
+                        return;
+                    }
+                }
+                this.EndPointsEle[index].setAttribute('x', `${x}`);
+                this.EndPointsEle[index].setAttribute('y', `${y}`);
             });
         } else {
-            const points = this.parsePoints();
-            this.points = points;
+            const _points = this.parsePoints();
+            this.points = _points;
             this.EndPoins = [
                 this.points[0],
                 this.points[this.points.length - 1]
             ];
-            this.updateEndPointEle(points);
+            this.updateEndPointEle(_points, applyMerge);
         }
     }
 
@@ -101,19 +116,18 @@ class Line {
         const pointRadiusWithScale = pointRadius / this.scale;
         this.EndPoins.forEach((item) => {
             if (!item || !item[0]) {
-                // eslint-disable-next-line
-                debugger;
+                return;
             }
             const circle = Array.from(document.querySelectorAll<SVGRectElement>('rect[type="end-point"]')).find(elem => {
-                return elem.getAttribute('x') === (item[0] - pointRadiusWithScale).toString() && elem.getAttribute('y') === (item[1] - pointRadiusWithScale).toString();
+                return elem.getAttribute('x') === `${item[0] - pointRadiusWithScale}` && elem.getAttribute('y') === `${item[1] - pointRadiusWithScale}`;
             }) || createSVGElement({
                 element: 'rect',
                 attr: {
                     type: 'end-point',
                     fill: '',
                     'fill-opacity': 1,
-                    rx: pointRadiusWithScale.toString(),
-                    ry: pointRadiusWithScale.toString(),
+                    rx: `${pointRadiusWithScale}`,
+                    ry: `${pointRadiusWithScale}`,
                     width: pointSize / this.scale,
                     height: pointSize / this.scale,
                     x: item[0] - pointRadiusWithScale,
@@ -151,19 +165,19 @@ class Line {
     public updateScale(scale: number) {
         this.scale = scale;
 
-        this.elem.setAttribute('stroke-width', (1 / this.scale).toString());
+        this.elem.setAttribute('stroke-width', `${1 / this.scale}`);
 
         const pointRadiusWithScale = pointRadius / this.scale;
         this.EndPointsEle.forEach((elem, index) => {
             const item = this.EndPoins[index];
 
-            elem.setAttribute('width', (pointSize / this.scale).toString());
-            elem.setAttribute('height', (pointSize / this.scale).toString());
-            elem.setAttribute('rx', pointRadiusWithScale.toString());
-            elem.setAttribute('ry', pointRadiusWithScale.toString());
-            elem.setAttribute('x', (item[0] - pointRadiusWithScale).toString());
-            elem.setAttribute('y', (item[1] - pointRadiusWithScale).toString());
-            elem.setAttribute('stroke-width', (1 / scale).toString());
+            elem.setAttribute('width', `${pointSize / this.scale}`);
+            elem.setAttribute('height', `${pointSize / this.scale}`);
+            elem.setAttribute('rx', `${pointRadiusWithScale}`);
+            elem.setAttribute('ry', `${pointRadiusWithScale}`);
+            elem.setAttribute('x', `${item[0] - pointRadiusWithScale}`);
+            elem.setAttribute('y', `${item[1] - pointRadiusWithScale}`);
+            elem.setAttribute('stroke-width', `${1 / scale}`);
         });
     }
 }

@@ -163,10 +163,10 @@ class OperationGroup {
                 if (item instanceof ControlPoint) {
                     const a = controlsArray[index - 1];
                     const b = controlsArray[index + 1];
-                    a && b && curveData.push([a.x, a.y], [item.x, item.y], [b.x, b.y]);
+                    a && a instanceof EndPoint && b && b instanceof EndPoint && curveData.push([a.x, a.y], [item.x, item.y], [b.x, b.y]);
                 } else {
                     const b = controlsArray[index + 1];
-                    b && curveData.push([item.x, item.y], [b.x, b.y]);
+                    b && b instanceof EndPoint && curveData.push([item.x, item.y], [b.x, b.y]);
                 }
             }
 

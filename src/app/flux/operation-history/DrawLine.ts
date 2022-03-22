@@ -2,8 +2,9 @@ import type DrawGroup from '../../ui/SVGEditor/svg-content/DrawGroup';
 import Operation from './Operation';
 
 type DrawLineProp = {
-    target: SVGPathElement
-    drawGroup: DrawGroup,
+    target: SVGPathElement;
+    closedLoop: boolean;
+    drawGroup: DrawGroup;
 }
 
 export default class DrawLine extends Operation<DrawLineProp> {
@@ -11,12 +12,13 @@ export default class DrawLine extends Operation<DrawLineProp> {
         super();
         this.state = {
             target: props.target,
+            closedLoop: props.closedLoop,
             drawGroup: props.drawGroup
         };
     }
 
     public redo() {
-        this.state.drawGroup.appendLine(this.state.target);
+        this.state.drawGroup.appendLine(this.state.target, this.state.closedLoop);
         this.state.drawGroup.resetOperation();
     }
 

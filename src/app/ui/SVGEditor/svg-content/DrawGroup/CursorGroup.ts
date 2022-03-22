@@ -127,20 +127,20 @@ class CursorGroup {
         }
         this.cursorCoordinate = [x, y];
         if (leftKeyPressed) {
-            this.cursorPoint.setAttribute('x', (x - pointRadius / this.scale).toString());
-            this.cursorPoint.setAttribute('y', (y - pointRadius / this.scale).toString());
+            this.cursorPoint.setAttribute('x', `${x - pointRadius / this.scale}`);
+            this.cursorPoint.setAttribute('y', `${y - pointRadius / this.scale}`);
             this.cursorPoint.setAttribute('rx', '0');
             this.cursorPoint.setAttribute('ry', '0');
         } else {
-            this.cursorPoint.setAttribute('x', (x - pointRadius / this.scale).toString());
-            this.cursorPoint.setAttribute('y', (y - pointRadius / this.scale).toString());
-            this.cursorPoint.setAttribute('rx', (pointRadius / this.scale).toString());
-            this.cursorPoint.setAttribute('ry', (pointRadius / this.scale).toString());
+            this.cursorPoint.setAttribute('x', `${x - pointRadius / this.scale}`);
+            this.cursorPoint.setAttribute('y', `${y - pointRadius / this.scale}`);
+            this.cursorPoint.setAttribute('rx', `${pointRadius / this.scale}`);
+            this.cursorPoint.setAttribute('ry', `${pointRadius / this.scale}`);
         }
 
         this.cursorPoint.setAttribute('fill', '');
-        this.cursor.setAttribute('x', (x - 11.5 / this.scale).toString());
-        this.cursor.setAttribute('y', (y - 7 / this.scale).toString());
+        this.cursor.setAttribute('x', `${x - 11.5 / this.scale}`);
+        this.cursor.setAttribute('y', `${y - 7 / this.scale}`);
     }
 
     public toogleVisible(visible: boolean) {
@@ -152,15 +152,12 @@ class CursorGroup {
     }
 
     public setAttachPoint(x?: number, y?: number) {
-        if (this.mode !== Mode.DRAW) {
-            return;
-        }
         if (x && y) {
-            console.log('cccccc', x, y);
-
-            this.attachPoint.setAttribute('cx', (x + 22 / this.scale).toString());
-            this.attachPoint.setAttribute('cy', (y + 14 / this.scale).toString());
-            this.attachPoint.setAttribute('visibility', 'visible');
+            if (this.mode === Mode.DRAW) {
+                this.attachPoint.setAttribute('cx', `${x + 22 / this.scale}`);
+                this.attachPoint.setAttribute('cy', `${y + 14 / this.scale}`);
+                this.attachPoint.setAttribute('visibility', 'visible');
+            }
 
             const r = (pointSize / 2 - 1) / this.scale;
             const paths = [
@@ -184,18 +181,18 @@ class CursorGroup {
     public updateScale(scale: number) { // just change the engineer scale
         this.scale = scale;
 
-        this.cursorPoint.setAttribute('width', (pointSize / this.scale).toString());
-        this.cursorPoint.setAttribute('height', (pointSize / this.scale).toString());
-        this.cursorPoint.setAttribute('stroke-width', (pointWeight / this.scale).toString());
+        this.cursorPoint.setAttribute('width', `${pointSize / this.scale}`);
+        this.cursorPoint.setAttribute('height', `${pointSize / this.scale}`);
+        this.cursorPoint.setAttribute('stroke-width', `${pointWeight / this.scale}`);
 
-        this.cursor.setAttribute('width', (cursorWidth / this.scale).toString());
-        this.cursor.setAttribute('height', (cursorWidth / this.scale).toString());
+        this.cursor.setAttribute('width', `${cursorWidth / this.scale}`);
+        this.cursor.setAttribute('height', `${cursorWidth / this.scale}`);
 
-        this.attachPoint.setAttribute('r', (AttachPointRadius / this.scale).toString());
-        this.attachPoint.setAttribute('stroke-width', (pointWeight / this.scale).toString());
+        this.attachPoint.setAttribute('r', `${AttachPointRadius / this.scale}`);
+        this.attachPoint.setAttribute('stroke-width', `${pointWeight / this.scale}`);
 
         Array.from(this.attachTip.children).forEach((elem) => {
-            elem.setAttribute('stroke-width', (pointWeight / this.scale).toString());
+            elem.setAttribute('stroke-width', `${pointWeight / this.scale}`);
         });
 
         this.cursorPoint && this.update(

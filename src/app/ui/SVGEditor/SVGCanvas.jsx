@@ -24,6 +24,7 @@ import SVGContentGroup from './svg-content/SVGContentGroup';
 import { library } from './lib/ext-shapes';
 import TextAction from './TextActions';
 import { DEFAULT_FILL_COLOR, DEFAULT_SCALE, SCALE_RATE, SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE } from './constants';
+import SVGSelector from './SVGSelector';
 
 const STEP_COUNT = 10;
 const THRESHOLD_DIST = 0.8;
@@ -323,8 +324,8 @@ class SVGCanvas extends PureComponent {
             svgContent: this.svgContent,
             scale: this.scale
         });
-        this.svgContentGroup.onDrawLine = (line) => {
-            this.props.onDrawLine(line);
+        this.svgContentGroup.onDrawLine = (line, closedLoop) => {
+            this.props.onDrawLine(line, closedLoop);
         };
         this.svgContentGroup.onDrawDelete = (lines) => {
             this.props.onDrawDelete(lines);
@@ -347,14 +348,7 @@ class SVGCanvas extends PureComponent {
     }
 
     setupSVGSelector() {
-        this.svgSelector = document.createElementNS(NS.SVG, 'rect');
-        setAttributes(this.svgSelector, {
-            fill: 'red',
-            stroke: '#000',
-            'stroke-width': 0,
-            style: 'pointer-events: none'
-        });
-        this.svgContainer.append(this.svgSelector);
+        this.svgSelector = new SVGSelector(this.svgContainer);
     }
 
     resetSVGSelector() {
@@ -496,6 +490,7 @@ class SVGCanvas extends PureComponent {
         // console.log('--- onMouseDown', this.mode);
         switch (this.mode) {
             case 'select': {
+                this.svgSelector.reset(x, y);
                 if (mouseTarget && mouseTarget.parentNode.id === 'svg-data') {
                     if (!this.svgContentGroup.selectedElements.includes(mouseTarget)
                         && mouseTarget.id !== 'printable-area-group') {
@@ -777,15 +772,20 @@ class SVGCanvas extends PureComponent {
     onMouseMove = (event) => {
         const draw = this.currentDrawing;
         // console.log('=== onMouseMove', this.mode, draw?.started);
+        const matrix = this.svgContentGroup.getScreenCTM().inverse();
+        const pt = transformPoint({ x: event.pageX, y: event.pageY }, matrix);
+        const x = pt.x;
+        const y = pt.y;
+
+        if (this.mode === 'select' && event.which === 1) {
+            this.svgSelector.update(x, y);
+        }
 
         if (!draw.started) {
             return;
         }
 
-        const matrix = this.svgContentGroup.getScreenCTM().inverse();
-        const pt = transformPoint({ x: event.pageX, y: event.pageY }, matrix);
-        const x = pt.x;
-        const y = pt.y;
+
         const element = this.svgContentGroup.findSVGElement(this.svgContentGroup.getId());
 
 
