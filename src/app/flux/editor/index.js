@@ -2189,6 +2189,24 @@ export const actions = {
             }));
             dispatch(actions.createModelFromElement(headType, elem, true));
         }
+    },
+
+    boxSelect: (headType, bbox, onlyContainSelect) => async (dispatch, getState) => {
+        const { modelGroup, SVGActions } = getState()[headType];
+        SVGActions.clearSelection();
+
+        workerManager.boxSelect([
+            bbox,
+            modelGroup.models.map((model) => {
+                const { x, y, width, height } = model.elem.getBBox();
+                return { x, y, width, height };
+            }),
+            onlyContainSelect
+        ], (indexs) => {
+            indexs.forEach(index => {
+                dispatch(actions.selectTargetModel(modelGroup.models[index], headType, true));
+            });
+        });
     }
 };
 

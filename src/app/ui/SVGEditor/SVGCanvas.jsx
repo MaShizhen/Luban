@@ -119,7 +119,8 @@ class SVGCanvas extends PureComponent {
         onDrawTransform: PropTypes.func.isRequired,
         onDrawTransformComplete: PropTypes.func.isRequired,
         onDrawComplete: PropTypes.func.isRequired,
-        onDrawStart: PropTypes.func.isRequired
+        onDrawStart: PropTypes.func.isRequired,
+        onBoxSelect: PropTypes.func.isRequired
     };
 
     updateTime = 0;
@@ -378,7 +379,6 @@ class SVGCanvas extends PureComponent {
     }
 
     setMode(mode, extShape) {
-        this.svgSelector.setVisible(mode === 'select');
         if (mode === 'select') {
             jQuery(this.svgContainer).css('cursor', 'auto');
         } else if (mode === 'draw') {
@@ -478,34 +478,8 @@ class SVGCanvas extends PureComponent {
         // console.log('--- onMouseDown', this.mode);
         switch (this.mode) {
             case 'select': {
-                this.svgSelector.reset(x, y);
-                if (mouseTarget && mouseTarget.parentNode.id === 'svg-data') {
-                    if (!this.svgContentGroup.selectedElements.includes(mouseTarget)
-                        && mouseTarget.id !== 'printable-area-group') {
-                        // without shift key, we regard the action as new select
-                        if (!event.shiftKey) {
-                            this.clearSelection();
-                        }
-
-                        this.addToSelection([mouseTarget]);
-                    }
-
-                    /*
-                    for (const elem of this.svgContentGroup.selectedElements) {
-                        const transformList = getTransformList(elem);
-
-                        // insert a dummy transform so if the element(s) are moved it will have
-                        // a transform to use for its translate.
-                        const transform = this.svgContainer.createSVGTransform();
-                        if (transformList.numberOfItems) {
-                            transformList.insertItemBefore(transform, 0);
-                        } else {
-                            transformList.appendItem(transform);
-                        }
-                    }
-                    */
-                } else {
-                    this.clearSelection();
+                if (!rightClick) {
+                    this.svgSelector.reset(x, y);
                 }
                 break;
             }
@@ -766,8 +740,8 @@ class SVGCanvas extends PureComponent {
         const y = pt.y;
 
         if (this.mode === 'select' && event.which === 1) {
-            console.log(x, y);
             this.svgSelector.update(x, y);
+            this.svgSelector.setVisible(true);
         }
 
         if (!draw.started) {
@@ -1064,7 +1038,31 @@ class SVGCanvas extends PureComponent {
         }
     };
 
+    setSelect = (event) => {
+        const { selectorBbox, onlyContainSelect } = this.svgSelector.setVisible(false);
+        const mouseTarget = this.getMouseTarget(event);
+
+        if (!selectorBbox && mouseTarget && mouseTarget.parentNode?.id === 'svg-data') {
+            if (!this.svgContentGroup.selectedElements.includes(mouseTarget)
+                && mouseTarget.id !== 'printable-area-group') {
+                // without shift key, we regard the action as new select
+                if (!event.shiftKey) {
+                    this.clearSelection();
+                }
+
+                this.addToSelection([mouseTarget]);
+            }
+        } else if (selectorBbox) {
+            this.props.onBoxSelect(selectorBbox, onlyContainSelect);
+        } else {
+            this.clearSelection();
+        }
+    };
+
     onMouseUp = (event) => {
+        if (this.mode === 'select' && event.which === 1) {
+            this.setSelect(event);
+        }
         const draw = this.currentDrawing;
         if (!draw.started) {
             return;

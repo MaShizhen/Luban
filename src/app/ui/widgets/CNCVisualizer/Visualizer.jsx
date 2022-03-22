@@ -309,6 +309,9 @@ class Visualizer extends Component {
         },
         onDrawComplete: (elem) => {
             this.props.onDrawComplete(elem);
+        },
+        onBoxSelect: (bbox, onlyContainSelect) => {
+            this.props.onBoxSelect(bbox, onlyContainSelect);
         }
     };
 
@@ -759,6 +762,7 @@ const mapDispatchToProps = (dispatch) => {
         onDrawTransformComplete: (elem, before, after) => dispatch(editorActions.drawTransformComplete('cnc', elem, before, after)),
         onDrawStart: (elem) => dispatch(editorActions.drawStart('cnc', elem)),
         onDrawComplete: (elem) => dispatch(editorActions.drawComplete('cnc', elem)),
+        onBoxSelect: (bbox, onlyContainSelect) => dispatch(editorActions.boxSelect('cnc', bbox, onlyContainSelect)),
 
         elementActions: {
             moveElementsStart: (elements, options) => dispatch(editorActions.moveElementsStart('cnc', elements, options)),
