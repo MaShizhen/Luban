@@ -2161,6 +2161,7 @@ export const actions = {
                 history
             }));
         }
+        dispatch(projectActions.autoSaveEnvironment(headType));
     },
     drawStart: (headType, elem) => (dispatch, getState) => {
         const { contentGroup, history } = getState()[headType];

@@ -192,8 +192,6 @@ class DrawGroup {
             this.cursorGroup.toogleVisible(true);
             this.setMode(Mode.DRAW);
         }
-
-        this.graph.lastElementChild && this.operationGroup.updateOperation(this.graph.lastElementChild as SVGPathElement);
     }
 
     public resetOperationByselect() {
@@ -542,7 +540,7 @@ class DrawGroup {
                     guideX = [cx, cy];
                 }
                 if (Math.abs(y - cy) <= this.attachSpace) {
-                    guideX = [cx, cy];
+                    guideY = [cx, cy];
                 }
                 if (Math.abs(x - cx) <= this.attachSpace && Math.abs(y - cy) <= this.attachSpace) {
                     if ((Math.abs(x - cx) < min || Math.abs(y - cy) < min)) {

@@ -30,6 +30,9 @@ class SVGLeftBar extends PureComponent {
 
     actions = {
         onClickInsertText: () => {
+            if (this.props.mode === 'draw') {
+                this.props.onStopDraw();
+            }
             this.props.insertDefaultTextVector();
         },
 

@@ -85,7 +85,6 @@ class SVGSelector {
                 }
             }
         }
-        // this.elem.setAttribute('visibility', visible ? 'visible' : 'hidden');
         this.elem.setAttribute('visibility', visible ? 'visible' : 'hidden');
         const onlyContainSelect = this.onlyContainSelect;
         if (!visible) {
