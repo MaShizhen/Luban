@@ -1388,6 +1388,7 @@ export const actions = {
 
         SVGActions.clearSelection();
         if (SVGActions.svgContentGroup.drawGroup.mode) {
+            SVGActions.svgContentGroup.exitModelEditing();
             SVGActions.svgContentGroup.drawGroup.stopDraw();
         }
         dispatch(baseActions.render(headType));

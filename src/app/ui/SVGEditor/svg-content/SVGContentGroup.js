@@ -30,6 +30,8 @@ class SVGContentGroup {
 
     onDrawComplete = noop;
 
+    onExitModelEditing = noop;
+
     constructor(options) {
         const { svgContent, scale } = options;
 
@@ -77,13 +79,16 @@ class SVGContentGroup {
             this.onDrawTransformComplete({ elem, before, after });
         };
         this.drawGroup.onDrawStart = (elem) => {
-            this.onChangeMode('draw');
             this.onDrawStart(elem);
         };
         this.drawGroup.onDrawComplete = (svg) => {
             this.onChangeMode('select');
             this.onDrawComplete(svg);
         };
+    }
+
+    exitModelEditing() {
+        this.onExitModelEditing();
     }
 
     // construct filter used in toolPath

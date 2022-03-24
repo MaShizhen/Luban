@@ -154,10 +154,6 @@ class DrawGroup {
     private setMode(mode: Mode) {
         this.mode = mode;
 
-        if (mode !== Mode.NONE) {
-            this.onDrawStart && this.onDrawStart(this.originGraph);
-        }
-
         this.cursorGroup.setAttachPoint();
         this.unSelectAllPoint();
 
@@ -166,13 +162,11 @@ class DrawGroup {
         this.operationGroup.clearOperation();
     }
 
-    public startDraw(svg?: SVGPathElement, transformation?: ModelTransformation) {
-        if (this.mode !== Mode.NONE) {
-            return;
-        }
-
+    public startDraw(mode: Mode, svg?: SVGPathElement, transformation?: ModelTransformation) {
+        this.setMode(mode);
         this.drawedLine = [];
 
+        this.graph && this.graph.remove();
         this.graph = createSVGElement({
             element: 'g',
             attr: {
@@ -181,16 +175,22 @@ class DrawGroup {
         });
         this.container.insertBefore(this.graph, this.container.firstElementChild);
 
-        if (svg) {
+        if (this.mode === Mode.DRAW) {
+            if (svg) {
+                this.originGraph = svg;
+                this.originGraph.setAttribute('visibility', 'hidden');
+
+                this.originTransformation = { ...transformation };
+                this.generatelines();
+            } else {
+                this.originGraph = null;
+            }
+            this.cursorGroup.toogleVisible(true);
+        } else {
             this.originGraph = svg;
             this.originGraph.setAttribute('visibility', 'hidden');
             this.originTransformation = { ...transformation };
             this.generatelines();
-            this.setMode(Mode.SELECT);
-        } else {
-            this.originGraph = null;
-            this.cursorGroup.toogleVisible(true);
-            this.setMode(Mode.DRAW);
         }
     }
 
@@ -550,24 +550,6 @@ class DrawGroup {
                 }
             }
         }
-        //  Array.from(children).forEach((item: SVGRectElement) => {
-        //     if (item.getAttribute('visibility') === 'visible' && item.getAttribute('rx') !== '') {
-        //         const cx = Number(item.getAttribute('x'));
-        //         const cy = Number(item.getAttribute('y'));
-        //         if (Math.abs(x - cx) <= this.attachSpace) {
-        //             guideX = [cx, cy];
-        //         }
-        //         if (Math.abs(y - cy) <= this.attachSpace) {
-        //             guideX = [cx, cy];
-        //         }
-        //         if (Math.abs(x - cx) <= this.attachSpace && Math.abs(y - cy) <= this.attachSpace) {
-        //             if ((Math.abs(x - cx) < min || Math.abs(y - cy) < min)) {
-        //                 attachPosition = [cx, cy];
-        //                 min = Math.min(Math.abs(x - cx), Math.abs(y - cy));
-        //             }
-        //         }
-        //     }
-        // });
 
         if (attachPosition) {
             return { x: attachPosition[0], y: attachPosition[1], attached: true };
@@ -767,28 +749,45 @@ class DrawGroup {
             return null;
         }
         this.setMode(Mode.NONE);
-
-        const path = this.generatePath();
+        let path = this.generatePath();
+        if (this.originGraph) {
+            const res = this.applyTransform(path, true);
+            path = res.toString();
+        }
         if (path) {
-            const graph = createSVGElement({
-                element: 'path',
-                attr: {
-                    id: `graph-${uuid()}`,
-                    'stroke-width': 1 / this.scale,
-                    d: path,
-                    source: path,
-                    fill: 'transparent',
-                    stroke: 'black'
-                }
-            }) as SVGPathElement;
             this.graph.remove();
-            this.container.append(graph);
 
+            let graph: SVGPathElement;
+            if (this.originGraph) {
+                graph = this.originGraph;
+                graph.setAttribute('d', path);
+                graph.setAttribute('source', path);
+                graph.setAttribute('visibility', 'visible');
+            } else {
+                graph = createSVGElement({
+                    element: 'path',
+                    attr: {
+                        id: `graph-${uuid()}`,
+                        'stroke-width': 1 / this.scale,
+                        d: path,
+                        source: path,
+                        fill: 'transparent',
+                        stroke: 'black'
+                    }
+                }) as SVGPathElement;
+                this.container.append(graph);
+            }
             const { x, y, width, height } = graph.getBBox();
             graph.setAttribute('x', `${x + width / 2}`);
             graph.setAttribute('y', `${y + height / 2}`);
-
-            if (this.onDrawComplete) {
+            if (this.originGraph && this.onDrawTransformComplete) {
+                const beforeGraphTransform = this.originGraph.getAttribute('d');
+                this.onDrawTransformComplete({
+                    elem: this.originGraph,
+                    before: beforeGraphTransform,
+                    after: path
+                });
+            } else if (!this.originGraph && this.onDrawComplete) {
                 this.onDrawComplete(graph);
             }
             return graph;
