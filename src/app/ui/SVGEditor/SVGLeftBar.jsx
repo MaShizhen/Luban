@@ -11,6 +11,7 @@ import Anchor from '../components/Anchor';
 class SVGLeftBar extends PureComponent {
     static propTypes = {
         mode: PropTypes.string.isRequired,
+        selectEditing: PropTypes.bool.isRequired,
         setMode: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired,
         onChangeFile: PropTypes.func.isRequired,
@@ -70,7 +71,7 @@ class SVGLeftBar extends PureComponent {
     };
 
     render() {
-        const { mode, editable } = this.props;
+        const { mode, editable, selectEditing } = this.props;
         const { showExtShape, extShape } = this.state;
         return (
             <React.Fragment>
@@ -124,8 +125,8 @@ class SVGLeftBar extends PureComponent {
                                     color="#545659"
                                     type={[`${mode === 'draw' ? 'hoverNoBackground' : 'hoverNormal'}`, 'pressSpecial']}
                                     size={48}
-                                    // name="ToolbarPen"
-                                    name="ToolbarMirror"
+                                    name="ToolbarPen"
+                                    // name="ToolbarMirror"
                                     disabled={!editable}
                                     className={
                                         classNames('background-transparent',
@@ -196,6 +197,30 @@ class SVGLeftBar extends PureComponent {
                             </div>
                         </div>
                     </div>
+                    {
+                        mode === 'select' && selectEditing && (
+                            <div
+                                className="position-ab width-152 margin-left-72 margin-top-64 border-default-grey-1 border-radius-8 background-color-white"
+                            >
+                                <div className="border-bottom-normal padding-vertical-10 padding-horizontal-16 height-40">
+                                    绘制路径
+                                </div>
+                                <div className={classNames(styles['center-pen'], 'width-152')}>
+                                    <Anchor
+                                        onClick={() => {
+                                            this.actions.stopDraw();
+                                        }}
+                                    >
+                                        <div
+                                            className={classNames('width-120', styles['center-pen-done'])}
+                                        >
+                                            <span>Done</span>
+                                        </div>
+                                    </Anchor>
+                                </div>
+                            </div>
+                        )
+                    }
                     {
                         mode === 'draw' && (
                             <div

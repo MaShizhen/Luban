@@ -117,6 +117,7 @@ class SVGCanvas extends PureComponent {
         onDrawLine: PropTypes.func.isRequired,
         onDrawDelete: PropTypes.func.isRequired,
         onDrawTransform: PropTypes.func.isRequired,
+        onDrawTransformStart: PropTypes.func.isRequired,
         onDrawTransformComplete: PropTypes.func.isRequired,
         onDrawComplete: PropTypes.func.isRequired,
         onDrawStart: PropTypes.func.isRequired,
@@ -161,6 +162,10 @@ class SVGCanvas extends PureComponent {
     callbacks = {};
 
     svgSelector = null;
+
+    editingElem = null;
+
+    preSelectionGroup = null;
 
     componentDidMount() {
         this.setupSVGContainer();
@@ -325,6 +330,7 @@ class SVGCanvas extends PureComponent {
             svgContent: this.svgContent,
             scale: this.scale
         });
+        this.preSelectionGroup = this.svgContentGroup.preSelectionGroup;
         this.svgContentGroup.onDrawLine = (line, closedLoop) => {
             this.props.onDrawLine(line, closedLoop);
         };
@@ -341,10 +347,15 @@ class SVGCanvas extends PureComponent {
             this.props.onDrawStart(elem);
         };
         this.svgContentGroup.onDrawComplete = (elem) => {
+            this.editingElem = null;
             this.props.onDrawComplete(elem);
         };
         this.svgContentGroup.onChangeMode = (mode) => {
             this.setMode(mode);
+        };
+        this.svgContentGroup.onExitModelEditing = () => {
+            this.editingElem = null;
+            this.setMode('select');
         };
     }
 
@@ -358,6 +369,9 @@ class SVGCanvas extends PureComponent {
         this.svgContainer.addEventListener('wheel', this.onMouseWheel, false);
         // this.svgContainer.addEventListener('contextmenu', this.onContextmenu, false);
         this.svgContainer.addEventListener('mouseup', this.onMouseUp, false);
+        this.svgContainer.addEventListener('mouseleave', (event) => {
+            this.setSelect(event, 'mouseleave');
+        }, false);
         window.addEventListener('resize', this.onResize, false);
         window.addEventListener('hashchange', this.onResize, false);
         window.addEventListener('dblclick', this.onDblClick, false);
@@ -382,11 +396,7 @@ class SVGCanvas extends PureComponent {
         if (mode === 'select') {
             jQuery(this.svgContainer).css('cursor', 'auto');
         } else if (mode === 'draw') {
-            if (this.svgContentGroup.drawGroup.mode === 1) {
-                jQuery(this.svgContainer).css('cursor', 'none');
-            } else {
-                jQuery(this.svgContainer).css('cursor', 'auto');
-            }
+            jQuery(this.svgContainer).css('cursor', 'none');
         } else {
             jQuery(this.svgContainer).css('cursor', 'crosshair');
         }
@@ -429,7 +439,14 @@ class SVGCanvas extends PureComponent {
         if (jQuery(target).closest('#selector-parent-group').length) {
             return this.svgContentGroup.selectorParentGroup;
         }
-        if (this.mode === 'draw') {
+        if (this.mode === 'select' && target.parentElement === this.preSelectionGroup) {
+            const targetId = target.getAttribute('target-id');
+            const path = document.querySelector(`path[id="${targetId}"]`);
+            if (path) {
+                return path;
+            }
+        }
+        if (this.mode === 'draw' || (this.mode === 'select' && this.editingElem)) {
             return target;
         } else {
             while (target && target.parentNode && target.parentNode !== this.svgContentGroup.group && target.parentNode.nodeName !== 'svg') {
@@ -478,7 +495,12 @@ class SVGCanvas extends PureComponent {
         // console.log('--- onMouseDown', this.mode);
         switch (this.mode) {
             case 'select': {
-                if (!rightClick) {
+                if (this.editingElem) {
+                    draw.started = true;
+                    draw.startX = x;
+                    draw.startY = y;
+                    this.svgContentGroup.drawGroup.onMouseDown(mouseTarget, x, y);
+                } else if (!rightClick) {
                     this.svgSelector.reset(x, y);
                 }
                 break;
@@ -739,12 +761,15 @@ class SVGCanvas extends PureComponent {
         const x = pt.x;
         const y = pt.y;
 
-        if (this.mode === 'select' && event.which === 1) {
+        if (this.mode === 'select' && event.which === 1 && !this.editingElem) {
             this.svgSelector.update(x, y);
             this.svgSelector.setVisible(true);
         }
 
         if (!draw.started) {
+            if (this.editingElem) {
+                this.svgContentGroup.drawGroup.onMouseMove(event, [x, y], [0, 0]);
+            }
             return;
         }
 
@@ -888,6 +913,14 @@ class SVGCanvas extends PureComponent {
 
         switch (this.mode) {
             case 'select': {
+                if (this.editingElem) {
+                    const dx = x - draw.startX;
+                    const dy = y - draw.startY;
+                    if (dx === 0 && dy === 0) {
+                        break;
+                    }
+                    this.svgContentGroup.drawGroup.onMouseMove(event, [x, y], [dx, dy]);
+                }
                 // TODO select with drawing box
                 // const { startX, startY } = draw;
                 // let width = Math.abs(startX - x);
@@ -1038,7 +1071,7 @@ class SVGCanvas extends PureComponent {
         }
     };
 
-    setSelect = (event) => {
+    setSelect = (event, mouseleave) => {
         const { selectorBbox, onlyContainSelect } = this.svgSelector.setVisible(false);
         const mouseTarget = this.getMouseTarget(event);
 
@@ -1054,13 +1087,13 @@ class SVGCanvas extends PureComponent {
             }
         } else if (selectorBbox) {
             this.props.onBoxSelect(selectorBbox, onlyContainSelect);
-        } else {
+        } else if (!mouseleave) {
             this.clearSelection();
         }
     };
 
     onMouseUp = (event) => {
-        if (this.mode === 'select' && event.which === 1) {
+        if (this.mode === 'select' && event.which === 1 && !this.editingElem) {
             this.setSelect(event);
         }
         const draw = this.currentDrawing;
@@ -1080,6 +1113,9 @@ class SVGCanvas extends PureComponent {
         switch (this.mode) {
             case 'select': {
                 element && element.remove();
+                if (this.editingElem) {
+                    this.svgContentGroup.drawGroup.onMouseUp(event, x, y);
+                }
                 return; // note this is not break
             }
 
@@ -1251,7 +1287,10 @@ class SVGCanvas extends PureComponent {
         } else if (tagName === 'path' && mouseTarget.getAttribute('id')?.includes('graph')) {
             this.clearSelection();
             const svgModel = this.props.SVGActions.getSVGModelByElement(mouseTarget);
-            this.svgContentGroup.drawGroup.startDraw(mouseTarget, svgModel.transformation);
+            this.editingElem = mouseTarget;
+            this.setMode('select');
+            this.svgContentGroup.drawGroup.startDraw(this.mode, mouseTarget, svgModel.transformation);
+            this.props.onDrawTransformStart(mouseTarget);
         }
     };
 
@@ -1282,7 +1321,6 @@ class SVGCanvas extends PureComponent {
 
     getNextId() {
         this.counter++;
-        return `id${this.counter}`;
     }
 
     getBsplinePoint(t) {
@@ -1327,6 +1365,24 @@ class SVGCanvas extends PureComponent {
         this.offsetX = 0;
         this.offsetY = 0;
         this.updateCanvas();
+    };
+
+    startDraw = () => {
+        if (this.editingElem) {
+            this.svgContentGroup.drawGroup.stopDraw();
+            this.setMode('draw');
+            const svgModel = this.props.SVGActions.getSVGModelByElement(this.editingElem);
+            this.svgContentGroup.drawGroup.startDraw(this.mode, this.editingElem, svgModel.transformation);
+        } else {
+            this.setMode('draw');
+            this.svgContentGroup.drawGroup.startDraw(this.mode);
+        }
+    };
+
+    stopDraw = () => {
+        this.editingElem = null;
+        this.svgContentGroup.drawGroup.stopDraw();
+        this.setMode('select');
     };
 
     zoomIn = () => {

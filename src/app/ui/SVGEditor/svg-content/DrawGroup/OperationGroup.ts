@@ -13,7 +13,7 @@ class OperationGroup {
 
     public controlPoints: SVGGElement;
 
-    private connectLines: SVGElement;
+    public connectLines: SVGElement;
 
     private previewLine: SVGPathElement
 
@@ -242,7 +242,8 @@ class OperationGroup {
             return;
         }
         const lasetEndPoint = this.controlsArray[this.controlsArray.length - 1];
-        if (Math.abs(lasetEndPoint.x - x) <= minimumSpacing || Math.abs(lasetEndPoint.y - y) <= minimumSpacing) {
+
+        if (Math.sqrt((lasetEndPoint.x - x) ** 2 + (lasetEndPoint.y - y) ** 2) <= minimumSpacing) {
             return;
         }
         const point = new ControlPoint(x, y);

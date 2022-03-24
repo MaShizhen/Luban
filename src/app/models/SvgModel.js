@@ -2,7 +2,7 @@ import { v4 as uuid } from 'uuid';
 import * as THREE from 'three';
 import Canvg from 'canvg';
 import svgPath from 'svgpath';
-import { coordGmSvgToModel } from '../ui/SVGEditor/element-utils';
+import { coordGmSvgToModel, createSVGElement } from '../ui/SVGEditor/element-utils';
 
 import { NS } from '../ui/SVGEditor/lib/namespaces';
 
@@ -181,6 +181,8 @@ class SvgModel extends BaseModel {
 
     resource = new Resource();
 
+    pathPreSelectionArea = null;
+
     constructor(modelInfo, modelGroup) {
         super(modelInfo, modelGroup);
         const { elem, size } = modelInfo;
@@ -211,6 +213,7 @@ class SvgModel extends BaseModel {
         this.processMode(modelInfo.mode, modelInfo.config);
         // use model info to refresh element
         this.refresh();
+        this.generatePathPreSelectionArea();
         // trigger update source, should add parmas to togger this func
         this.onTransform();
     }
@@ -261,6 +264,12 @@ class SvgModel extends BaseModel {
     setParent(parent) {
         this.parent = parent;
         this.appendToParent();
+    }
+
+    setPreSelection(parent) {
+        if (this.pathPreSelectionArea) {
+            parent.append(this.pathPreSelectionArea);
+        }
     }
 
     appendToParent() {
@@ -789,6 +798,7 @@ class SvgModel extends BaseModel {
         }
 
         SvgModel.recalculateElementTransformList(element, { x, y, scaleX, scaleY, angle });
+        SvgModel.updatePathPreSelectionArea(element);
     }
 
     static recalculateElementTransformList(element, t) {
@@ -1013,6 +1023,37 @@ class SvgModel extends BaseModel {
         this.meshObject.add(this.processObject3D);
 
         this.updateTransformation(this.transformation);
+    }
+
+    generatePathPreSelectionArea() {
+        if (this.type === 'path') {
+            const d = this.elem.getAttribute('d');
+            const strokeWidth = this.elem.getAttribute('stroke-width');
+            const id = this.elem.getAttribute('id');
+            this.pathPreSelectionArea = createSVGElement({
+                element: 'path',
+                attr: {
+                    'target-id': id,
+                    'stroke-width': Number(strokeWidth) * 20,
+                    d,
+                    fill: 'transparent',
+                    stroke: 'transparent'
+                }
+            });
+        }
+    }
+
+    static updatePathPreSelectionArea(element) {
+        if (element && element.nodeName === 'path') {
+            const d = element.getAttribute('d');
+            const id = element.getAttribute('id');
+            const transform = element.getAttribute('transform');
+            const pathPreSelectionArea = document.querySelector(`[target-id="${id}"]`);
+            if (pathPreSelectionArea) {
+                pathPreSelectionArea.setAttribute('d', d);
+                pathPreSelectionArea.setAttribute('transform', transform);
+            }
+        }
     }
 
     // updateVisible(param) {

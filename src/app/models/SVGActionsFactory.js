@@ -637,12 +637,14 @@ class SVGActionsFactory {
             clonedSVGModel.transformation.positionX += 5;
             clonedSVGModel.transformation.positionY -= 5;
             clonedSVGModel.setParent(this.svgContentGroup.group);
+            clonedSVGModel.setPreSelection(this.svgContentGroup.preSelectionGroup);
             const svgModel = clonedSVGModel.clone(this.modelGroup);
             clonedSVGModel.elem.remove();
 
             const INDEXMARGIN = 0.02;
             svgModel.elem.id = svgModel.modelID;
             svgModel.setParent(this.svgContentGroup.group);
+            svgModel.setPreSelection(this.svgContentGroup.preSelectionGroup);
             svgModel.modelName = this.modelGroup._createNewModelName(svgModel);
             this.modelGroup.resetModelsPositionZByOrder();
             svgModel.transformation.positionZ = (this.modelGroup.models.length + 1) * INDEXMARGIN;
@@ -732,6 +734,7 @@ class SVGActionsFactory {
 
             const svgModel = this.modelGroup.addModel(options);
             svgModel.setParent(this.svgContentGroup.group);
+            svgModel.setPreSelection(this.svgContentGroup.preSelectionGroup);
             return svgModel;
         } catch (e) {
             console.error(e);

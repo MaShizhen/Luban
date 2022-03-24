@@ -4,8 +4,8 @@ export const attachSpace = 8;
 
 export enum Mode {
     NONE,
-    DRAW,
-    SELECT
+    DRAW = 'draw',
+    SELECT = 'select'
 }
 
 export const pointSize = 10;

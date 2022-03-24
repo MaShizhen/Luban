@@ -691,6 +691,7 @@ export const actions = {
         };
 
         const model = modelGroup.addModel(options);
+        model.setPreSelection(contentGroup.preSelectionGroup);
 
         const operation = new AddOperation2D({
             toolPathGroup,
@@ -1388,6 +1389,7 @@ export const actions = {
 
         SVGActions.clearSelection();
         if (SVGActions.svgContentGroup.drawGroup.mode) {
+            SVGActions.svgContentGroup.exitModelEditing();
             SVGActions.svgContentGroup.drawGroup.stopDraw();
         }
         dispatch(baseActions.render(headType));

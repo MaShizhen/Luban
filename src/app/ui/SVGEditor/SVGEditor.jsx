@@ -70,7 +70,8 @@ class SVGEditor extends PureComponent {
     leftBarRef = React.createRef();
 
     state = {
-        mode: 'select'
+        mode: 'select',
+        selectEditing: false
     };
 
     shortcutHandler = {
@@ -180,6 +181,7 @@ class SVGEditor extends PureComponent {
     componentDidMount() {
         this.canvas.current.on(SVG_EVENT_MODE, (mode) => {
             this.setState({
+                ...this.state,
                 mode: mode
             });
         });
@@ -226,14 +228,38 @@ class SVGEditor extends PureComponent {
     }
 
     onStartDraw() {
-        this.canvas.current.svgContentGroup.drawGroup.startDraw();
+        this.canvas.current.startDraw();
     }
 
     onStopDraw() {
-        this.canvas.current.svgContentGroup.drawGroup.stopDraw();
+        this.setState({
+            ...this.state,
+            selectEditing: false
+        }, () => {
+            console.log('success', this.state.selectEditing);
+            this.canvas.current.stopDraw();
+        });
+    }
+
+    onDrawTransformStart(elem) {
+        this.setState({
+            ...this.state,
+            selectEditing: !!elem
+        });
+    }
+
+    onDrawTransformComplete(...args) {
+        this.setState({
+            ...this.state,
+            selectEditing: false
+        }, () => {
+            console.log('success2', this.state.selectEditing);
+            this.props.editorActions.onDrawTransformComplete(...args);
+        });
     }
 
     render() {
+        console.log(this.state.selectEditing);
         return (
             <React.Fragment>
                 <div className={styles['laser-table']} style={{ position: 'relative' }}>
@@ -265,7 +291,8 @@ class SVGEditor extends PureComponent {
                                 onDrawLine={this.props.editorActions.onDrawLine}
                                 onDrawDelete={this.props.editorActions.onDrawDelete}
                                 onDrawTransform={this.props.editorActions.onDrawTransform}
-                                onDrawTransformComplete={this.props.editorActions.onDrawTransformComplete}
+                                onDrawTransformStart={(elem) => this.onDrawTransformStart(elem)}
+                                onDrawTransformComplete={(...args) => this.onDrawTransformComplete(...args)}
                                 onDrawStart={this.props.editorActions.onDrawStart}
                                 onDrawComplete={this.props.editorActions.onDrawComplete}
                                 onBoxSelect={this.props.editorActions.onBoxSelect}
@@ -274,6 +301,7 @@ class SVGEditor extends PureComponent {
                         <SVGLeftBar
                             ref={this.leftBarRef}
                             mode={this.state.mode}
+                            selectEditing={this.state.selectEditing}
                             insertDefaultTextVector={this.insertDefaultTextVector}
                             setMode={this.setMode}
                             onChangeFile={this.props.onChangeFile}

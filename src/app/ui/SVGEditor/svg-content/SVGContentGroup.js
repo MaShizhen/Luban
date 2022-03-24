@@ -30,6 +30,10 @@ class SVGContentGroup {
 
     onDrawComplete = noop;
 
+    onExitModelEditing = noop;
+
+    preSelectionGroup = null
+
     constructor(options) {
         const { svgContent, scale } = options;
 
@@ -42,13 +46,12 @@ class SVGContentGroup {
         this.group = document.createElementNS(NS.SVG, 'g');
         this.group.setAttribute('id', 'svg-data');
 
-        const svgDrawGroup = document.createElementNS(NS.SVG, 'g');
-        svgDrawGroup.setAttribute('id', 'svg-draw-group');
-
+        this.preSelectionGroup = document.createElementNS(NS.SVG, 'g');
+        this.preSelectionGroup.setAttribute('id', 'svg-pre-selection');
 
         this.svgContent.append(this.backgroundGroup);
         this.svgContent.append(this.group);
-        this.svgContent.append(svgDrawGroup);
+        this.svgContent.append(this.preSelectionGroup);
 
         this.initFilter();
         // this.selectorManager = new SelectorManager({
@@ -77,13 +80,16 @@ class SVGContentGroup {
             this.onDrawTransformComplete({ elem, before, after });
         };
         this.drawGroup.onDrawStart = (elem) => {
-            this.onChangeMode('draw');
             this.onDrawStart(elem);
         };
         this.drawGroup.onDrawComplete = (svg) => {
             this.onChangeMode('select');
             this.onDrawComplete(svg);
         };
+    }
+
+    exitModelEditing() {
+        this.onExitModelEditing();
     }
 
     // construct filter used in toolPath
@@ -137,6 +143,11 @@ class SVGContentGroup {
         this.drawGroup.updateScale(scale);
         for (const childNode of this.getChildNodes()) {
             childNode.setAttribute('stroke-width', 1 / scale);
+        }
+        if (this.preSelectionGroup) {
+            for (const childNode of this.preSelectionGroup.childNodes) {
+                childNode.setAttribute('stroke-width', 1 / scale * 20);
+            }
         }
     }
 
@@ -193,6 +204,7 @@ class SVGContentGroup {
         this.showSelectorGrips(false);
         for (const elem of elems) {
             this.selectedElements = this.selectedElements.filter(v => v !== elem);
+            this.deletePreseleElement(elem);
             elem.remove();
         }
     }
@@ -201,7 +213,16 @@ class SVGContentGroup {
         if (elem) {
             this.showSelectorGrips(false);
             this.selectedElements = this.selectedElements.filter(v => v !== elem);
+            this.deletePreseleElement(elem);
             elem.remove();
+        }
+    }
+
+    deletePreseleElement(elem) {
+        const id = elem.getAttribute('id');
+        const pathPreSelectionArea = document.querySelector(`[target-id="${id}"]`);
+        if (pathPreSelectionArea) {
+            pathPreSelectionArea.remove();
         }
     }
 
