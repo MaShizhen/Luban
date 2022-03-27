@@ -268,6 +268,7 @@ class SvgModel extends BaseModel {
 
     setPreSelection(parent) {
         if (this.pathPreSelectionArea) {
+            this.pathPreSelectionArea.setAttribute('target-id', this.modelID);
             parent.append(this.pathPreSelectionArea);
         }
     }
@@ -325,32 +326,14 @@ class SvgModel extends BaseModel {
         const elem = this.elem;
         const coord = coordGmSvgToModel(this.size, elem);
 
-        // eslint-disable-next-line prefer-const
-        let { x, y, width, height, positionX, positionY, scaleX, scaleY } = coord;
-        width *= scaleX;
-        height *= scaleY;
-
+        const { x, y, width, height, positionX, positionY } = coord;
         const clone = elem.cloneNode(true);
-        clone.setAttribute('transform', `scale(${scaleX} ${scaleY})`);
+        clone.setAttribute('transform', 'scale(1 1)');
         clone.setAttribute('font-size', clone.getAttribute('font-size'));
 
-        let vx = x * scaleX;
-        let vy = y * scaleY;
-        let vwidth = width;
-        let vheight = height;
-
-        if (scaleX < 0) {
-            vx += vwidth;
-            vwidth = -vwidth;
-        }
-        if (scaleY < 0) {
-            vy += vheight;
-            vheight = -vheight;
-        }
-
         // Todo: need to optimize
-        const content = `<svg x="0" y="0" width="${vwidth}mm" height="${vheight}mm" `
-            + `viewBox="${vx} ${vy} ${vwidth} ${vheight}" `
+        const content = `<svg x="0" y="0" width="${width}mm" height="${height}mm" `
+            + `viewBox="${x} ${y} ${width} ${height}" `
             + `xmlns="http://www.w3.org/2000/svg">${new XMLSerializer().serializeToString(clone)}</svg>`;
         const model = {
             modelID: elem.getAttribute('id'),
@@ -358,15 +341,14 @@ class SvgModel extends BaseModel {
             width: width,
             height: height,
             transformation: {
-                positionX: positionX,
-                positionY: positionY
+                positionX,
+                positionY
             },
             config: {
                 svgNodeName: elem.nodeName,
                 text: elem.getAttribute('textContent'),
                 'font-size': elem.getAttribute('font-size'),
-                'font-family': elem.getAttribute('font-family'),
-                'svg-path-d': elem.getAttribute('d')
+                'font-family': elem.getAttribute('font-family')
             }
         };
 
@@ -491,21 +473,18 @@ class SvgModel extends BaseModel {
             //     break;
             case 'path': {
                 const isDraw = this.isDrawGraphic();
-                if (isDraw && config['svg-path-d']) {
-                    let d = config['svg-path-d'];
-                    const originX = elem.getAttribute('x');
-                    const originY = elem.getAttribute('y');
-
-                    if (originX && originY && (Number(originX) !== x || Number(originY) !== y)) {
-                        d = svgPath(d).translate(x - Number(originX), y - Number(originY)).toString();
-                    }
-                    elem.setAttribute('d', d);
-                    elem.setAttribute('source', d);
-
+                if (isDraw) {
+                    const d = elem.getAttribute('d');
                     const bbox = elem.getBBox();
-                    elem.setAttribute('x', (bbox.x + bbox.width / 2).toString());
-                    elem.setAttribute('y', (bbox.y + bbox.height / 2).toString());
-
+                    const cx = bbox.x + bbox.width / 2;
+                    const cy = bbox.y + bbox.height / 2;
+                    // clone Model
+                    if (cx !== x || cy !== y) {
+                        const newPath = svgPath(d)
+                            .translate(x - cx, y - cy)
+                            .toString();
+                        elem.setAttribute('d', newPath);
+                    }
                     break;
                 }
                 const imageElement = document.createElementNS(NS.SVG, 'image');
@@ -769,11 +748,19 @@ class SvgModel extends BaseModel {
                 break;
             }
             case 'path': {
-                const originX = element.getAttribute('x');
-                const originY = element.getAttribute('y');
-                const d = element.getAttribute('source');
-                const newPath = svgPath(d).translate(x - Number(originX), y - Number(originY)).toString();
+                const d = element.getAttribute('d');
+                const bbox = element.getBBox();
+                const cx = bbox.x + bbox.width / 2;
+                const cy = bbox.y + bbox.height / 2;
+                const newPath = svgPath(d)
+                    .translate(-cx, -cy)
+                    .scale(absScaleX, absScaleY)
+                    // .rotate(angle)
+                    .translate(x, y)
+                    .toString();
                 element.setAttribute('d', newPath);
+                scaleX /= absScaleX;
+                scaleY /= absScaleY;
                 break;
             }
 
@@ -1184,7 +1171,7 @@ class SvgModel extends BaseModel {
         // this.updateSource();
         const isDraw = this.isDrawGraphic();
         if (isDraw) {
-            this.config['svg-path-d'] = this.elem.getAttribute('d');
+            this.config.d = this.elem.getAttribute('d');
         }
     }
 
@@ -1271,6 +1258,21 @@ class SvgModel extends BaseModel {
             transformation,
             processImageName: this.resource.processedFile.name
         };
+    }
+
+    isStraightLine() {
+        if (this.type === 'path') {
+            const d = this.elem.getAttribute('d');
+            const flag = ['M', 'L', 'Z'];
+            let res = true;
+            svgPath(d).iterate((segment, index) => {
+                if (segment[0] !== flag[index]) {
+                    res = false;
+                }
+            });
+            return res;
+        }
+        return false;
     }
 }
 

@@ -2146,9 +2146,17 @@ export const actions = {
         const { contentGroup, history, SVGActions } = getState()[headType];
         history.clearDrawOperations();
         if (before !== after) {
+            const model = SVGActions.getSVGModelByElement(elem);
+            if (after === '') {
+                // delete model
+                SVGActions.clearSelection();
+                SVGActions.addSelectedSvgModelsByModels([model]);
+                dispatch(actions.removeSelectedModel(headType));
+                return;
+            }
             const operations = new Operations();
             const operation = new DrawTransformComplete({
-                elem,
+                svgModel: model,
                 before,
                 after,
                 drawGroup: contentGroup.drawGroup
@@ -2156,14 +2164,15 @@ export const actions = {
             operations.push(operation);
             history.push(operations);
 
-            const model = SVGActions.getSVGModelByElement(elem);
             model.onTransform();
+            model.updateSource();
+            SvgModel.completeElementTransform(elem);
 
             dispatch(actions.updateState(headType, {
                 history
             }));
+            dispatch(projectActions.autoSaveEnvironment(headType));
         }
-        dispatch(projectActions.autoSaveEnvironment(headType));
     },
     drawStart: (headType, elem) => (dispatch, getState) => {
         const { contentGroup, history } = getState()[headType];

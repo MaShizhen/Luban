@@ -2,7 +2,7 @@ import { createSVGElement, setAttributes } from '../../element-utils';
 import { Mode, pointRadius, pointSize, pointWeight, TCoordinate, ThemeColor } from './constants';
 import { ControlPoint, EndPoint } from './Point';
 
-const minimumSpacing = 0.1;
+const minimumSpacing = 2;
 
 class OperationGroup {
     public mode: Mode;
@@ -193,7 +193,7 @@ class OperationGroup {
             }
         });
 
-        lineEndPoints.length > 0 && this.renderControlLines(lineEndPoints);
+        this.renderControlLines(lineEndPoints);
         this.renderPoints(pointData);
         curveData.length > 0 && this.renderCurve(curveData);
     }
@@ -254,12 +254,20 @@ class OperationGroup {
     public setEndPoint(x: number, y: number) {
         if (this.controlsArray.length > 0) {
             const lasetPoint = this.controlsArray[this.controlsArray.length - 1];
-            if (lasetPoint.x === x && lasetPoint.y === y) {
-                return false;
-            }
             if (lasetPoint instanceof ControlPoint) {
+                if (Math.sqrt((lasetPoint.x - x) ** 2 + (lasetPoint.y - y) ** 2) <= minimumSpacing) {
+                    return false;
+                }
                 const lasetEndPoint = this.controlsArray[this.controlsArray.length - 2];
                 if (lasetEndPoint.x === x && lasetEndPoint.y === y) {
+                    this.controlsArray = [];
+                    this.clearOperation();
+                    return false;
+                }
+            } else {
+                if (lasetPoint.x === x && lasetPoint.y === y) {
+                    this.controlsArray = [];
+                    this.clearOperation();
                     return false;
                 }
             }

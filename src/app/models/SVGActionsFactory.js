@@ -65,6 +65,12 @@ function genModelConfig(elem, size, materials = {}) {
 
     // eslint-disable-next-line prefer-const
     let { x, y, width, height, positionX, positionY, scaleX, scaleY } = coord;
+    if (!width) {
+        width = 1;
+    }
+    if (!height) {
+        height = 1;
+    }
     // leave a little space for line width
     let vx = (x - deltaLeftX) * scaleX;
     let vy = (y - deltaTopY) * scaleY;
@@ -104,8 +110,7 @@ function genModelConfig(elem, size, materials = {}) {
             text: elem.getAttribute('textContent'),
             alignment: 'left',
             'font-size': elem.getAttribute('font-size'),
-            'font-family': elem.getAttribute('font-family'),
-            'svg-path-d': elem.getAttribute('d')
+            'font-family': elem.getAttribute('font-family')
         }
     };
 
@@ -637,7 +642,6 @@ class SVGActionsFactory {
             clonedSVGModel.transformation.positionX += 5;
             clonedSVGModel.transformation.positionY -= 5;
             clonedSVGModel.setParent(this.svgContentGroup.group);
-            clonedSVGModel.setPreSelection(this.svgContentGroup.preSelectionGroup);
             const svgModel = clonedSVGModel.clone(this.modelGroup);
             clonedSVGModel.elem.remove();
 
