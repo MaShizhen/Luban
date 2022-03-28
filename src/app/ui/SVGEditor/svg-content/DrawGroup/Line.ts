@@ -1,6 +1,6 @@
 import { Bezier } from 'bezier-js';
 import { createSVGElement } from '../../element-utils';
-import { pointRadius, pointSize, ThemeColor, TCoordinate } from './constants';
+import { pointRadius, pointSize, ThemeColor, TCoordinate, minimumSpacing } from './constants';
 
 class Line {
     public points: TCoordinate[];
@@ -15,7 +15,7 @@ class Line {
 
     private scale: number;
 
-    private model : Bezier;
+    private model: Bezier;
 
     constructor(data: TCoordinate[] | SVGPathElement, scale: number, closedLoop = false) {
         this.scale = scale;
@@ -157,6 +157,9 @@ class Line {
     }
 
     private calcSymmetryPoint([x, y]: TCoordinate, [x1, y1]: TCoordinate): TCoordinate {
+        if (Math.sqrt((x1 - x) ** 2 + (y1 - y) ** 2) <= minimumSpacing) {
+            return null;
+        }
         return [2 * x1 - x, 2 * y1 - y];
     }
 
@@ -164,10 +167,18 @@ class Line {
         let points: TCoordinate[];
         if (this.points.length === 2) {
             const p = this.calcSymmetryPoint([x, y], this.points[1]);
-            points = [this.points[0], p, this.points[1]];
+            if (!p) {
+                points = this.points;
+            } else {
+                points = [this.points[0], p, this.points[1]];
+            }
         } else {
             const p = this.calcSymmetryPoint([x, y], this.points[2]);
-            points = [this.points[0], this.points[1], p, this.points[2]];
+            if (!p) {
+                points = this.points;
+            } else {
+                points = [this.points[0], this.points[1], p, this.points[2]];
+            }
         }
         const path = this.generatePath(points);
         this.elem.setAttribute('d', path);

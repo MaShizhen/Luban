@@ -2182,7 +2182,7 @@ export const actions = {
         }
         const operations = new Operations();
         const operation = new DrawStart({
-            elem,
+            elemID: elem ? elem.getAttribute('id') : '',
             contentGroup
         });
         operations.push(operation);
@@ -2219,6 +2219,19 @@ export const actions = {
                 dispatch(actions.selectTargetModel(modelGroup.models[index], headType, true));
             });
         });
+    },
+
+    setCanvasMode: (headType, mode, ext) => (dispatch) => {
+        if (!ext) {
+            ext = {};
+        }
+        if (mode === 'draw' || ext.elem) {
+            dispatch(actions.resetProcessState(headType));
+        }
+        dispatch(baseActions.updateState(headType, {
+            SVGCanvasMode: mode,
+            SVGCanvasExt: ext
+        }));
     }
 };
 

@@ -14,3 +14,5 @@ export const AttachPointRadius = 3.2;
 export const pointWeight = 1;
 
 export type TCoordinate = [number, number];
+
+export const minimumSpacing = 2;

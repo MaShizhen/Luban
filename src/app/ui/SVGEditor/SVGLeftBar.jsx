@@ -39,7 +39,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
                 showExtShape: false,
                 extShape: ext ?? extShape
             });
-            props.setMode(mode, ext);
+            props.setMode(mode, ext || {});
         },
 
         showExt: () => {

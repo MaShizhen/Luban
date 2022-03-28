@@ -1,21 +1,22 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import PropTypes from 'prop-types';
 
 
 import { shortcutActions, priorities, ShortcutManager } from '../../lib/shortcut';
 import styles from './index.styl';
-import { SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE } from './constants';
+import { SVG_EVENT_CONTEXTMENU } from './constants';
 import SVGCanvas from './SVGCanvas';
 import SVGLeftBar from './SVGLeftBar';
 
 const SVGEditor = forwardRef((props, ref) => {
     const canvas = useRef(null);
     const leftBarRef = useRef(null);
+    const extRef = useRef(props.SVGCanvasExt);
+    extRef.current = props.SVGCanvasExt;
 
-    const [mode, setMode] = useState('select');
-    const [selectEditing, setSelectEditing] = useState(false);
-    const selectEditingRef = useRef(selectEditing);
-    selectEditingRef.current = selectEditing;
+    const onStopDraw = (exitCompletely) => {
+        canvas.current.stopDraw(exitCompletely);
+    };
 
     const shortcutHandler = {
         title: 'SVGEditor',
@@ -45,7 +46,7 @@ const SVGEditor = forwardRef((props, ref) => {
             },
             [shortcutActions.DELETE]: () => {
                 if (!(props.menuDisabledCount > 0)) {
-                    props.editorActions.deleteSelectedModel(selectEditingRef.current ? 'draw' : mode);
+                    props.editorActions.deleteSelectedModel(extRef.current.elem ? 'draw' : props.SVGCanvasMode);
                 }
             },
             [shortcutActions.COPY]: () => {
@@ -67,6 +68,9 @@ const SVGEditor = forwardRef((props, ref) => {
                 if (!(props.menuDisabledCount > 0)) {
                     props.editorActions.cut();
                 }
+            },
+            [shortcutActions.ENTER]: () => {
+                onStopDraw(true);
             },
             // optimize: accelerate when continuous click
             'MOVE-UP': {
@@ -113,15 +117,18 @@ const SVGEditor = forwardRef((props, ref) => {
         }
     };
 
-
     useEffect(() => {
         ShortcutManager.register(shortcutHandler);
     }, []);
 
+    const changeCanvasMode = (_mode, ext) => {
+        props.editorActions.setMode(_mode, ext);
+    };
+
     useEffect(() => {
-        canvas.current.on(SVG_EVENT_MODE, (_mode) => {
-            setMode(_mode);
-        });
+        // canvas.current.on(SVG_EVENT_MODE, (_mode) => {
+        //     changeCanvasMode(_mode);
+        // });
 
         canvas.current.on(SVG_EVENT_CONTEXTMENU, (event) => {
             props.showContextMenu(event);
@@ -131,10 +138,6 @@ const SVGEditor = forwardRef((props, ref) => {
         props.initContentGroup(canvas.current.svgContentGroup);
     }, []);
 
-    const changeCanvasMode = (_mode, ext) => {
-        canvas.current.setMode(_mode, ext);
-    };
-
     const insertDefaultTextVector = async () => {
         const element = await props.createText('Snapmaker');
         props.onCreateElement(element);
@@ -143,8 +146,6 @@ const SVGEditor = forwardRef((props, ref) => {
         // canvas.current.selectOnly([elem]);
         changeCanvasMode('select');
     };
-
-
 
     const hideLeftBarOverlay = () => {
         leftBarRef.current.actions.hideLeftBarOverlay();
@@ -170,17 +171,8 @@ const SVGEditor = forwardRef((props, ref) => {
         canvas.current.startDraw();
     };
 
-    const onStopDraw = (exitCompletely) => {
-        setSelectEditing(false);
-        canvas.current.stopDraw(exitCompletely);
-    };
-
-    const onDrawTransformStart = (elem) => {
-        setSelectEditing(!!elem);
-    };
 
     const onDrawTransformComplete = (...args) => {
-        setSelectEditing(false);
         props.editorActions.onDrawTransformComplete(...args);
     };
 
@@ -190,6 +182,8 @@ const SVGEditor = forwardRef((props, ref) => {
                 <div className={styles['laser-table-row']}>
                     <div className={styles['view-space']}>
                         <SVGCanvas
+                            mode={props.SVGCanvasMode}
+                            ext={props.SVGCanvasExt}
                             className={styles['svg-content']}
                             editable={props.editable}
                             SVGActions={props.SVGActions}
@@ -215,17 +209,17 @@ const SVGEditor = forwardRef((props, ref) => {
                             onDrawLine={props.editorActions.onDrawLine}
                             onDrawDelete={props.editorActions.onDrawDelete}
                             onDrawTransform={props.editorActions.onDrawTransform}
-                            onDrawTransformStart={(elem) => onDrawTransformStart(elem)}
                             onDrawTransformComplete={(...args) => onDrawTransformComplete(...args)}
                             onDrawStart={props.editorActions.onDrawStart}
                             onDrawComplete={props.editorActions.onDrawComplete}
                             onBoxSelect={props.editorActions.onBoxSelect}
+                            setMode={changeCanvasMode}
                         />
                     </div>
                     <SVGLeftBar
                         ref={leftBarRef}
-                        mode={mode}
-                        selectEditing={selectEditing}
+                        mode={props.SVGCanvasMode}
+                        selectEditing={!!props.SVGCanvasExt.elem}
                         insertDefaultTextVector={insertDefaultTextVector}
                         setMode={changeCanvasMode}
                         onChangeFile={props.onChangeFile}
@@ -256,6 +250,8 @@ SVGEditor.propTypes = {
     coordinateSize: PropTypes.object.isRequired,
     editable: PropTypes.bool,
     menuDisabledCount: PropTypes.number,
+    SVGCanvasMode: PropTypes.string.isRequired,
+    SVGCanvasExt: PropTypes.string.isRequired,
 
     updateScale: PropTypes.func.isRequired,
     updateTarget: PropTypes.func.isRequired,

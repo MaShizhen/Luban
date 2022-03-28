@@ -54,7 +54,7 @@ const TransformationSection = ({ headType, updateSelectedModelUniformScalingStat
     const logicalHeight = height * Math.abs(scaleY);
     const logicalAngle = -angle;
     const canResize = ((isTextVector ? config?.text?.length > 0 : true) && selectedModelArray.length === 1 && !selectedModelArray[0].isStraightLine());
-    const canRotate = (selectedModelArray.length === 1 && !selectedModelArray[0].isStraightLine());
+    const canRotate = selectedModelArray.length === 1;
     const selectedNotHide = (selectedModelArray.length === 1) && selectedModelArray[0].visible || selectedModelArray.length > 1;
     const canFlip = (selectedModelArray.length === 1 && !selectedModelArray[0].isStraightLine());
 

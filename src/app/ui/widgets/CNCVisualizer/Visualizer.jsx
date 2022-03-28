@@ -63,6 +63,8 @@ class Visualizer extends Component {
         renderingTimestamp: PropTypes.number.isRequired,
         enableShortcut: PropTypes.bool.isRequired,
         isOverSize: PropTypes.bool,
+        SVGCanvasMode: PropTypes.string.isRequired,
+        SVGCanvasExt: PropTypes.string.isRequired,
         // func
         selectAllElements: PropTypes.func.isRequired,
         cut: PropTypes.func.isRequired,
@@ -312,6 +314,9 @@ class Visualizer extends Component {
         },
         onBoxSelect: (bbox, onlyContainSelect) => {
             this.props.onBoxSelect(bbox, onlyContainSelect);
+        },
+        setMode: (mode, extShape) => {
+            this.props.setMode(mode, extShape);
         }
     };
 
@@ -461,6 +466,8 @@ class Visualizer extends Component {
                         isActive={!this.props.currentModalPath && this.props.pathname.indexOf('cnc') > 0 && this.props.enableShortcut}
                         ref={this.svgCanvas}
                         editable={editable}
+                        SVGCanvasMode={this.props.SVGCanvasMode}
+                        SVGCanvasExt={this.props.SVGCanvasExt}
                         size={this.props.size}
                         menuDisabledCount={this.props.menuDisabledCount}
                         initContentGroup={this.props.initContentGroup}
@@ -682,7 +689,7 @@ const mapStateToProps = (state, ownProps) => {
     const { size } = state.machine;
     const { currentModalPath, menuDisabledCount } = state.appbarMenu;
     const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
-        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager, enableShortcut, isOverSize } = state.cnc;
+        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager, enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
@@ -715,7 +722,9 @@ const mapStateToProps = (state, ownProps) => {
         isChangedAfterGcodeGenerating,
         stage,
         progress,
-        isOverSize
+        isOverSize,
+        SVGCanvasMode,
+        SVGCanvasExt
     };
 };
 
@@ -763,6 +772,7 @@ const mapDispatchToProps = (dispatch) => {
         onDrawStart: (elem) => dispatch(editorActions.drawStart('cnc', elem)),
         onDrawComplete: (elem) => dispatch(editorActions.drawComplete('cnc', elem)),
         onBoxSelect: (bbox, onlyContainSelect) => dispatch(editorActions.boxSelect('cnc', bbox, onlyContainSelect)),
+        setMode: (mode, ext) => dispatch(editorActions.setCanvasMode('cnc', mode, ext)),
 
         elementActions: {
             moveElementsStart: (elements, options) => dispatch(editorActions.moveElementsStart('cnc', elements, options)),

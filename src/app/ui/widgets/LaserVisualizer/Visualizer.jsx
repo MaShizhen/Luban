@@ -65,6 +65,8 @@ class Visualizer extends Component {
         isChangedAfterGcodeGenerating: PropTypes.bool.isRequired,
         enableShortcut: PropTypes.bool.isRequired,
         isOverSize: PropTypes.bool,
+        SVGCanvasMode: PropTypes.string.isRequired,
+        SVGCanvasExt: PropTypes.string.isRequired,
 
         // func
         selectAllElements: PropTypes.func.isRequired,
@@ -332,6 +334,9 @@ class Visualizer extends Component {
         },
         onBoxSelect: (bbox, onlyContainSelect) => {
             this.props.onBoxSelect(bbox, onlyContainSelect);
+        },
+        setMode: (mode, extShape) => {
+            this.props.setMode(mode, extShape);
         }
     };
 
@@ -467,6 +472,8 @@ class Visualizer extends Component {
                 >
                     <SVGEditor
                         editable={editable}
+                        SVGCanvasMode={this.props.SVGCanvasMode}
+                        SVGCanvasExt={this.props.SVGCanvasExt}
                         isActive={!this.props.currentModalPath && this.props.pathname.indexOf('laser') > 0 && this.props.enableShortcut}
                         ref={this.svgCanvas}
                         menuDisabledCount={this.props.menuDisabledCount}
@@ -692,7 +699,7 @@ const mapStateToProps = (state, ownProps) => {
     const { currentModalPath, menuDisabledCount } = state.appbarMenu;
     const { background, progressStatesManager } = state.laser;
     const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
-        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize, enableShortcut, isOverSize } = state.laser;
+        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize, enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
@@ -725,7 +732,9 @@ const mapStateToProps = (state, ownProps) => {
         renderingTimestamp,
         stage,
         progress,
-        isOverSize
+        isOverSize,
+        SVGCanvasMode,
+        SVGCanvasExt
     };
 };
 
@@ -775,6 +784,7 @@ const mapDispatchToProps = (dispatch) => {
         onDrawStart: (elem) => dispatch(editorActions.drawStart('laser', elem)),
         onDrawComplete: (elem) => dispatch(editorActions.drawComplete('laser', elem)),
         onBoxSelect: (bbox, onlyContainSelect) => dispatch(editorActions.boxSelect('laser', bbox, onlyContainSelect)),
+        setMode: (mode, ext) => dispatch(editorActions.setCanvasMode('laser', mode, ext)),
 
         elementActions: {
             moveElementsStart: (elements) => dispatch(editorActions.moveElementsStart('laser', elements)),

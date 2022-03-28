@@ -1,8 +1,6 @@
 import { createSVGElement, setAttributes } from '../../element-utils';
-import { Mode, pointRadius, pointSize, pointWeight, TCoordinate, ThemeColor } from './constants';
+import { Mode, pointRadius, minimumSpacing, pointSize, pointWeight, TCoordinate, ThemeColor } from './constants';
 import { ControlPoint, EndPoint } from './Point';
-
-const minimumSpacing = 2;
 
 class OperationGroup {
     public mode: Mode;

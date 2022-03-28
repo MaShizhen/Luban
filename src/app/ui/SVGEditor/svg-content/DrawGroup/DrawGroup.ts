@@ -81,6 +81,8 @@ class DrawGroup {
 
     private redrawLatestLine: boolean;
 
+    private latestDrawingCompleted: boolean = false;
+
     constructor(contentGroup: SVGGElement, scale: number) {
         this.scale = scale;
         this.init();
@@ -96,6 +98,7 @@ class DrawGroup {
         this.operationGroup.onDrawgraph = (points: Array<[number, number]>) => {
             const latestLine = this.drawedLine[this.drawedLine.length - 1];
             latestLine && latestLine.updatePosition([], true);
+            this.latestDrawingCompleted = true;
             this.drawgraph(points);
         };
 
@@ -159,6 +162,9 @@ class DrawGroup {
 
     private setMode(mode: Mode) {
         this.mode = mode;
+        if (mode !== Mode.NONE) {
+            this.onDrawStart && this.onDrawStart(this.originGraph);
+        }
 
         this.cursorGroup.setAttachPoint();
         this.unSelectAllPoint();
@@ -169,6 +175,7 @@ class DrawGroup {
     }
 
     public startDraw(mode: Mode, svg?: SVGPathElement, transformation?: ModelTransformation) {
+        this.originGraph = svg;
         this.setMode(mode);
         this.drawedLine = [];
 
@@ -183,7 +190,6 @@ class DrawGroup {
 
         if (this.mode === Mode.DRAW) {
             if (svg) {
-                this.originGraph = svg;
                 this.originGraphPath = this.originGraph.getAttribute('d');
 
                 this.originGraph.setAttribute('visibility', 'hidden');
@@ -195,7 +201,6 @@ class DrawGroup {
             }
             this.cursorGroup.toogleVisible(true);
         } else {
-            this.originGraph = svg;
             this.originGraphPath = this.originGraph.getAttribute('d');
             this.originGraph.setAttribute('visibility', 'hidden');
             this.originTransformation = { ...transformation };
@@ -401,6 +406,7 @@ class DrawGroup {
         this.clearAllConnectLine();
 
         if (this.mode === Mode.DRAW) {
+            this.latestDrawingCompleted = false;
             if (this.cursorGroup.isAttached() && this.operationGroup.controlsArray.length > 0) {
                 const success = this.operationGroup.setEndPoint(x, y);
                 if (success) {
@@ -417,14 +423,7 @@ class DrawGroup {
             this.selected.line && this.selected.line.elem.setAttribute('stroke', 'black');
             this.selected.point && this.selected.point.setAttribute('fill', '');
             if (this.preSelectPoint) {
-                // if (this.preSelectLine) {
-                //     this.preSelectLine.elem.setAttribute('stroke', 'black');
-                //     this.preSelectLine.elem.setAttribute('stroke-opacity', '1');
-                //     this.preSelectLine = null;
-                // }
-
                 const parent = this.preSelectPoint.parentElement as unknown as SVGGElement;
-                // if (parent === this.endPointsGroup || parent === this.operationGroup.controlPoints) {
                 this.preSelectPoint.setAttribute('fill', ThemeColor);
                 this.selected.line = this.getLine(this.preSelectPoint);
                 if (this.selected.line) {
@@ -491,13 +490,13 @@ class DrawGroup {
             this.cursorGroup.update(false, x, y);
             const lng = this.operationGroup.controlsArray.length;
             if (lng > 0) {
-                if (!(this.operationGroup.controlsArray[lng - 1] instanceof ControlPoint)) {
-                    if (this.redrawLatestLine) {
-                        const latestLine = this.drawedLine[this.drawedLine.length - 1];
-                        latestLine.updatePosition([], true);
-                    }
+                if (this.operationGroup.controlsArray[lng - 1] instanceof EndPoint) {
                     this.operationGroup.setControlPoint(...this.cursorPosition);
                 }
+            }
+            if (this.redrawLatestLine) {
+                const latestLine = this.drawedLine[this.drawedLine.length - 1];
+                latestLine && latestLine.updatePosition([], true);
             }
             this.redrawLatestLine = false;
             return;
@@ -728,7 +727,7 @@ class DrawGroup {
             this.preSelectPoint = null;
             if (nearestLine) {
                 this.preSelectLine = nearestLine;
-                if (nearestLine !== this.selected.line) {
+                if (this.selected.point || nearestLine !== this.selected.line) {
                     nearestLine.elem.setAttribute('stroke-opacity', '0.5');
                     nearestLine.elem.setAttribute('stroke', ThemeColor);
                 }
@@ -742,7 +741,7 @@ class DrawGroup {
         if (this.mode === Mode.NONE) {
             return;
         }
-        const leftKeyPressed = event.which === 1;
+        let leftKeyPressed = event.which === 1;
 
         const { x, y, attached } = this.attachCursor(cx, cy);
         if (attached) {
@@ -756,17 +755,27 @@ class DrawGroup {
         } else {
             this.cursorGroup.setAttachPoint();
         }
-        this.cursorGroup.update(leftKeyPressed, x, y);
         this.cursorPosition = [x, y];
 
         if (this.mode === Mode.DRAW) {
+            this.setGuideLineVisibility(true);
+            if (leftKeyPressed && this.operationGroup.controlsArray[this.operationGroup.controlsArray.length - 1] instanceof ControlPoint) {
+                leftKeyPressed = false;
+            }
+            this.cursorGroup.update(leftKeyPressed, x, y);
             this.operationGroup.updatePrviewByCursor(leftKeyPressed ? new ControlPoint(x, y) : new EndPoint(x, y));
-            if (leftKeyPressed && this.drawedLine.length > 0 && this.operationGroup.controlsArray.length > 0) {
-                const latestLine = this.drawedLine[this.drawedLine.length - 1];
-                const latestPoint = latestLine.points[latestLine.points.length - 1];
-                if (latestPoint[0] === this.operationGroup.controlsArray[0].x && latestPoint[1] === this.operationGroup.controlsArray[0].y) {
+            if (leftKeyPressed && this.drawedLine.length > 0) {
+                if (this.operationGroup.controlsArray.length === 0 && this.latestDrawingCompleted) {
+                    const latestLine = this.drawedLine[this.drawedLine.length - 1];
                     this.redrawLatestLine = true;
                     latestLine && latestLine.redrawCurve(x, y);
+                } else if (this.operationGroup.lastControlsArray.length > 0 && this.operationGroup.controlsArray[this.operationGroup.controlsArray.length - 1] instanceof EndPoint) {
+                    const latestLine = this.drawedLine[this.drawedLine.length - 1];
+                    const latestPoint = latestLine.points[latestLine.points.length - 1];
+                    if (latestPoint[0] === this.operationGroup.controlsArray[0].x && latestPoint[1] === this.operationGroup.controlsArray[0].y) {
+                        this.redrawLatestLine = true;
+                        latestLine && latestLine.redrawCurve(x, y);
+                    }
                 }
             }
         } else {
