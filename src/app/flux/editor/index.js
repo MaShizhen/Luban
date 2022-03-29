@@ -1196,10 +1196,10 @@ export const actions = {
         return modelGroup.getSelectedModel();
     },
 
-    bringSelectedModelToFront: (headType) => (dispatch, getState) => {
+    bringSelectedModelToFront: (headType, svgModel) => (dispatch, getState) => {
         const { modelGroup, SVGActions } = getState()[headType];
-        SVGActions.bringElementToFront();
-        modelGroup.bringSelectedModelToFront();
+        SVGActions.bringElementToFront(svgModel.elem);
+        modelGroup.bringSelectedModelToFront(svgModel);
     },
 
     sendSelectedModelToBack: (headType) => (dispatch, getState) => {
@@ -2205,20 +2205,40 @@ export const actions = {
 
     boxSelect: (headType, bbox, onlyContainSelect) => async (dispatch, getState) => {
         const { modelGroup, SVGActions } = getState()[headType];
-        SVGActions.clearSelection();
-
+        const selectedModelArray = modelGroup.selectedModelArray;
+        const models = modelGroup.models;
         workerManager.boxSelect([
             bbox,
-            modelGroup.models.map((model) => {
+            models.map((model) => {
                 const { x, y, width, height } = model.elem.getBBox();
                 return { x, y, width, height };
             }),
             onlyContainSelect
         ], (indexs) => {
-            indexs.forEach(index => {
-                dispatch(actions.selectTargetModel(modelGroup.models[index], headType, true));
-            });
+            if (indexs.length > 0) {
+                const selectedModels = indexs.map(index => {
+                    return models[index];
+                });
+                selectedModels.forEach(model => {
+                    dispatch(actions.bringSelectedModelToFront(headType, model));
+                });
+                modelGroup.selectedModelArray = selectedModelArray.filter(model => {
+                    return selectedModels.includes(model);
+                });
+                SVGActions.svgContentGroup.selectedElements = modelGroup.selectedModelArray.map(model => model.elem);
+                SVGActions.selectedSvgModels = [];
+                SVGActions.addSelectedSvgModelsByModels(selectedModels);
+            } else {
+                SVGActions.clearSelection();
+            }
         });
+        dispatch(baseActions.render(headType));
+    },
+
+    isPointInSelectArea: (headType, x, y) => (dispatch, getState) => {
+        const { SVGActions } = getState()[headType];
+
+        return SVGActions.isPointInSelectArea([x, y]);
     },
 
     setCanvasMode: (headType, mode, ext) => (dispatch) => {

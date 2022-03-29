@@ -24,7 +24,9 @@ class SVGSelector {
 
     private onlyContainSelect: boolean;
 
-    constructor(contentGroup: SVGGElement, scale:number) {
+    public visible: boolean;
+
+    constructor(contentGroup: SVGGElement, scale: number) {
         this.scale = scale;
         this.elem = createSVGElement({
             element: 'rect',
@@ -37,12 +39,14 @@ class SVGSelector {
                 fill: ThemeColor,
                 'fill-opacity': 0.2,
                 stroke: ThemeColor,
+                'stroke-width': 2 / this.scale,
+                'stroke-opacity': 1
             }
         });
         contentGroup.append(this.elem);
     }
 
-    private update(x: number, y: number) {
+    public updateBox(x: number, y: number) {
         this.onlyContainSelect = x < this.x;
 
         this.width = Math.abs(x - this.x);
@@ -56,40 +60,37 @@ class SVGSelector {
         });
     }
 
-    public reset(x, y) {
-        this.elem.setAttribute('visibility', 'visible');
-
-        this.x = x;
-        this.y = y;
-        this.update(x, y);
-    }
-
-    public updateScale(scale:number) {
+    public updateScale(scale: number) {
         this.scale = scale;
+
+        this.elem.setAttribute('stroke-width', `${2 / this.scale}`);
     }
 
-    public setVisible(visible: boolean) {
-        let selectorBbox = null as TBbox;
-        const current = this.elem.getAttribute('visibility');
-
-        if (!visible && current === 'visible') {
-            if (this.x !== 0) {
-                const x = Number(this.elem.getAttribute('x'));
-                const y = Number(this.elem.getAttribute('y'));
-                const width = Number(this.elem.getAttribute('width'));
-                const height = Number(this.elem.getAttribute('height'));
-                if (width !== 0 && height !== 0) {
-                    selectorBbox = {
-                        x, y, width, height
-                    };
-                }
-            }
+    public setVisible(visible: boolean, x: number, y: number) {
+        this.visible = visible;
+        if (visible) {
+            this.x = x;
+            this.y = y;
+            this.elem.setAttribute('width', '0');
+            this.elem.setAttribute('height', '0');
         }
         this.elem.setAttribute('visibility', visible ? 'visible' : 'hidden');
-        const onlyContainSelect = this.onlyContainSelect;
-        if (!visible) {
-            this.update(-1, -1);
+    }
+
+    public getBBox() {
+        let selectorBbox = null as TBbox;
+        if (this.x !== 0) {
+            const x = Number(this.elem.getAttribute('x'));
+            const y = Number(this.elem.getAttribute('y'));
+            const width = Number(this.elem.getAttribute('width'));
+            const height = Number(this.elem.getAttribute('height'));
+            if (width !== 0 && height !== 0) {
+                selectorBbox = {
+                    x, y, width, height
+                };
+            }
         }
+        const onlyContainSelect = this.onlyContainSelect;
         return {
             selectorBbox,
             onlyContainSelect

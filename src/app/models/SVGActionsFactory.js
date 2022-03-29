@@ -1,3 +1,4 @@
+import { isInside } from 'overlap-area';
 import { DATA_PREFIX } from '../constants';
 import { coordGmSvgToModel, getBBox } from '../ui/SVGEditor/element-utils';
 
@@ -243,8 +244,8 @@ class SVGActionsFactory {
         this.svgContentGroup.deleteElements(selectedElements);
     }
 
-    bringElementToFront() {
-        const selected = this.svgContentGroup.getSelected();
+    bringElementToFront(model) {
+        const selected = model || this.svgContentGroup.getSelected();
         if (!selected) {
             return;
         }
@@ -850,6 +851,22 @@ class SVGActionsFactory {
             };
         }
         return this.selectedElementsTransformation;
+    }
+
+    isPointInSelectArea(point) {
+        if (this.selectedSvgModels.length === 0) {
+            return false;
+        }
+        return this.selectedSvgModels.some((model) => {
+            const { x, y, width, height } = model.elem.getBBox();
+            const modelBoxPoints = [
+                [x + width, y + height],
+                [x, y + height],
+                [x, y],
+                [x + width, y]
+            ];
+            return isInside(point, modelBoxPoints);
+        });
     }
 
     /**

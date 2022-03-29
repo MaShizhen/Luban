@@ -279,7 +279,8 @@ SVGEditor.propTypes = {
         rotateElementsStart: PropTypes.func.isRequired,
         rotateElements: PropTypes.func.isRequired,
         rotateElementsFinish: PropTypes.func.isRequired,
-        moveElementsOnKeyDown: PropTypes.func.isRequired
+        moveElementsOnKeyDown: PropTypes.func.isRequired,
+        isPointInSelectArea: PropTypes.func.isRequired
     }).isRequired,
     editorActions: PropTypes.object.isRequired,
 

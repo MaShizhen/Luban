@@ -2,6 +2,7 @@ import includes from 'lodash/includes';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import jQuery from 'jquery';
+import { throttle } from 'lodash';
 
 import { NS } from './lib/namespaces';
 import {
@@ -98,7 +99,8 @@ class SVGCanvas extends PureComponent {
             resizeElementsFinish: PropTypes.func.isRequired,
             rotateElementsStart: PropTypes.func.isRequired,
             rotateElements: PropTypes.func.isRequired,
-            rotateElementsFinish: PropTypes.func.isRequired
+            rotateElementsFinish: PropTypes.func.isRequired,
+            isPointInSelectArea: PropTypes.func.isRequired
         }).isRequired,
 
         // TODO: remove it, to flux (for textActions)
@@ -380,7 +382,11 @@ class SVGCanvas extends PureComponent {
         });
         this.svgContainer.addEventListener('mouseleave', (event) => {
             this.svgContentGroup.drawGroup.onMouseleave();
-            this.calculateSelectedModel(event, 'mouseleave');
+            const leftKeyPressed = event.which === 1;
+            if (leftKeyPressed) {
+                this.calculateSelectedModel(event, true);
+                this.svgSelector.setVisible(false);
+            }
         }, false);
         window.addEventListener('resize', this.onResize, false);
         window.addEventListener('hashchange', this.onResize, false);
@@ -517,7 +523,7 @@ class SVGCanvas extends PureComponent {
             }
         }
 
-        if (this.mode === 'select' && this.svgContentGroup.selectedElements.includes(mouseTarget)) {
+        if (this.mode === 'select' && (this.svgContentGroup.selectedElements.includes(mouseTarget) || this.props.elementActions.isPointInSelectArea(x, y))) {
             this.mode = 'move';
         }
         // hide left bar overlay
@@ -531,7 +537,8 @@ class SVGCanvas extends PureComponent {
                     draw.startY = y;
                     this.svgContentGroup.drawGroup.onMouseDown(mouseTarget, x, y);
                 } else if (!rightClick) {
-                    this.svgSelector.reset(x, y);
+                    this.svgSelector.setVisible(true, x, y);
+                    this.calculateSelectedModel(event, false);
                 }
                 break;
             }
@@ -792,8 +799,8 @@ class SVGCanvas extends PureComponent {
         const y = pt.y;
 
         if (this.mode === 'select' && event.which === 1 && !this.editingElem) {
-            this.svgSelector.update(x, y);
-            this.svgSelector.setVisible(true);
+            this.svgSelector.updateBox(x, y);
+            this.calculateSelectedModel(event, true);
         }
 
         if (this.mode !== 'draw' && this.mode !== 'select' && !draw.started) {
@@ -1095,11 +1102,17 @@ class SVGCanvas extends PureComponent {
         }
     };
 
-    calculateSelectedModel = (event, mouseleave) => {
-        const { selectorBbox, onlyContainSelect } = this.svgSelector.setVisible(false);
+    calculateSelectedModel = throttle((event, boxSelect) => {
+        console.log('boxSelect = ', boxSelect);
         const mouseTarget = this.getMouseTarget(event);
-
-        if (!selectorBbox && mouseTarget && mouseTarget.parentNode?.id === 'svg-data') {
+        if (boxSelect) {
+            const { selectorBbox, onlyContainSelect } = this.svgSelector.getBBox();
+            if (selectorBbox) {
+                this.props.onBoxSelect(selectorBbox, onlyContainSelect);
+            } else {
+                this.clearSelection();
+            }
+        } else if (mouseTarget && mouseTarget.parentNode?.id === 'svg-data') {
             if (!this.svgContentGroup.selectedElements.includes(mouseTarget)
                 && mouseTarget.id !== 'printable-area-group') {
                 // without shift key, we regard the action as new select
@@ -1109,16 +1122,14 @@ class SVGCanvas extends PureComponent {
 
                 this.addToSelection([mouseTarget]);
             }
-        } else if (selectorBbox) {
-            this.props.onBoxSelect(selectorBbox, onlyContainSelect);
-        } else if (!mouseleave) {
+        } else {
             this.clearSelection();
         }
-    };
+    }, 300);
 
     onMouseUp = (event) => {
         if (this.mode === 'select' && event.which === 1 && !this.editingElem) {
-            this.calculateSelectedModel(event);
+            this.svgSelector.setVisible(false);
         }
         const draw = this.currentDrawing;
         if (!draw.started) {
@@ -1342,7 +1353,6 @@ class SVGCanvas extends PureComponent {
     }
 
     getNextId() {
-        this.counter++;
     }
 
     getBsplinePoint(t) {
@@ -1420,6 +1430,8 @@ class SVGCanvas extends PureComponent {
                     this.svgContentGroup.drawGroup.startDraw(this.mode, elem, svgModel.transformation);
                 }
             }, 100);
+        } else {
+            this.currentDrawing.started = false;
         }
     };
 

@@ -120,7 +120,8 @@ class Visualizer extends Component {
             rotateElementsStart: PropTypes.func.isRequired,
             rotateElements: PropTypes.func.isRequired,
             rotateElementsFinish: PropTypes.func.isRequired,
-            moveElementsOnKeyDown: PropTypes.func.isRequired
+            moveElementsOnKeyDown: PropTypes.func.isRequired,
+            isPointInSelectArea: PropTypes.func.isRequired
         })
     };
 
@@ -797,7 +798,8 @@ const mapDispatchToProps = (dispatch) => {
             rotateElements: (elements, options) => dispatch(editorActions.rotateElements('laser', elements, options)),
             rotateElementsFinish: (elements, options) => dispatch(editorActions.rotateElementsFinish('laser', elements, options)),
             moveElementsOnKeyDown: (options) => dispatch(editorActions.moveElementsOnKeyDown('laser', null, options)),
-            rotateElementsImmediately: (elements, options) => dispatch(editorActions.rotateElementsImmediately('laser', elements, options))
+            rotateElementsImmediately: (elements, options) => dispatch(editorActions.rotateElementsImmediately('laser', elements, options)),
+            isPointInSelectArea: (x, y) => dispatch(editorActions.isPointInSelectArea('laser', x, y))
         }
         // onModelTransform: () => dispatch(editorActions.onModelTransform('laser')),
         // onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('laser'))

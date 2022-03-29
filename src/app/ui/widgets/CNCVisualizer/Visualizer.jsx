@@ -117,7 +117,8 @@ class Visualizer extends Component {
             rotateElementsStart: PropTypes.func.isRequired,
             rotateElements: PropTypes.func.isRequired,
             rotateElementsFinish: PropTypes.func.isRequired,
-            moveElementsOnKeyDown: PropTypes.func.isRequired
+            moveElementsOnKeyDown: PropTypes.func.isRequired,
+            isPointInSelectArea: PropTypes.func.isRequired
         })
     };
 
@@ -785,7 +786,8 @@ const mapDispatchToProps = (dispatch) => {
             rotateElements: (elements, options) => dispatch(editorActions.rotateElements('cnc', elements, options)),
             rotateElementsFinish: (elements, options) => dispatch(editorActions.rotateElementsFinish('cnc', elements, options)),
             moveElementsOnKeyDown: (options) => dispatch(editorActions.moveElementsOnKeyDown('cnc', null, options)),
-            rotateElementsImmediately: (elements, options) => dispatch(editorActions.rotateElementsImmediately('cnc', elements, options))
+            rotateElementsImmediately: (elements, options) => dispatch(editorActions.rotateElementsImmediately('cnc', elements, options)),
+            isPointInSelectArea: (x, y) => dispatch(editorActions.isPointInSelectArea('cnc', x, y))
         }
         // onModelTransform: () => dispatch(editorActions.onModelTransform('cnc')),
         // onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('cnc'))
