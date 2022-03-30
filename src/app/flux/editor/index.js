@@ -2223,7 +2223,6 @@ export const actions = {
 
     boxSelect: (headType, bbox, onlyContainSelect) => async (dispatch, getState) => {
         const { modelGroup, SVGActions } = getState()[headType];
-        const selectedModelArray = modelGroup.selectedModelArray;
         const models = modelGroup.models;
         workerManager.boxSelect([
             bbox,
@@ -2233,6 +2232,8 @@ export const actions = {
             }),
             onlyContainSelect
         ], (indexs) => {
+            SVGActions.clearSelection();
+
             if (indexs.length > 0) {
                 const selectedModels = indexs.map(index => {
                     return models[index];
@@ -2240,14 +2241,7 @@ export const actions = {
                 selectedModels.forEach(model => {
                     dispatch(actions.bringSelectedModelToFront(headType, model));
                 });
-                modelGroup.selectedModelArray = selectedModelArray.filter(model => {
-                    return selectedModels.includes(model);
-                });
-                SVGActions.svgContentGroup.selectedElements = modelGroup.selectedModelArray.map(model => model.elem);
-                SVGActions.selectedSvgModels = [];
                 SVGActions.addSelectedSvgModelsByModels(selectedModels);
-            } else {
-                SVGActions.clearSelection();
             }
         });
         dispatch(baseActions.render(headType));

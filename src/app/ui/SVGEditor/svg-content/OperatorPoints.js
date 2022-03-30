@@ -371,8 +371,12 @@ class OperatorPoints {
             L${minX},${maxY} z`;
         rect.setAttribute('d', dstr);
         // todo it will be rotated after resize
-        const xform = angle ? `rotate(${[angle, cx, cy].join(',')})` : '';
-        this.operatorPointsGroup.setAttribute('transform', xform);
+        if (elements.length === 1) {
+            const xform = angle ? `rotate(${[angle, cx, cy].join(',')})` : '';
+            this.operatorPointsGroup.setAttribute('transform', xform);
+        } else {
+            this.resetTransformList();
+        }
 
         // recalculate grip coordinates
         this.operatorGripCoords = {

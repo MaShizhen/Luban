@@ -74,7 +74,8 @@ const CURRENTDRAWING_INIT = {
         minY: null,
         maxX: null,
         maxY: null
-    }
+    },
+    selectedTarget: null
 };
 
 class SVGCanvas extends PureComponent {
@@ -536,8 +537,22 @@ class SVGCanvas extends PureComponent {
                     draw.startY = y;
                     this.svgContentGroup.drawGroup.onMouseDown(mouseTarget, x, y);
                 } else if (!rightClick) {
-                    this.svgSelector.setVisible(true, x, y);
-                    this.calculateSelectedModel(event, false);
+                    if (mouseTarget && mouseTarget.parentNode?.id === 'svg-data') {
+                        draw.selectedTarget = mouseTarget;
+                        if (!this.svgContentGroup.selectedElements.includes(mouseTarget)
+                            && mouseTarget.id !== 'printable-area-group') {
+                            // without shift key, we regard the action as new select
+                            if (!event.shiftKey) {
+                                this.clearSelection();
+                            }
+
+                            this.addToSelection([mouseTarget]);
+                        }
+                    } else {
+                        draw.selectedTarget = null;
+                        this.clearSelection();
+                        this.svgSelector.setVisible(true, x, y);
+                    }
                 }
                 break;
             }
@@ -1100,31 +1115,20 @@ class SVGCanvas extends PureComponent {
         }
     };
 
-    calculateSelectedModel = throttle((event, boxSelect) => {
-        const mouseTarget = this.getMouseTarget(event);
-        if (boxSelect) {
+    calculateSelectedModel = throttle(() => {
+        const selectedTarget = this.currentDrawing.selectedTarget;
+        if (!selectedTarget) {
             const { selectorBbox, onlyContainSelect } = this.svgSelector.getBBox();
             if (selectorBbox) {
                 this.props.onBoxSelect(selectorBbox, onlyContainSelect);
             } else {
                 this.clearSelection();
             }
-        } else if (mouseTarget && mouseTarget.parentNode?.id === 'svg-data') {
-            if (!this.svgContentGroup.selectedElements.includes(mouseTarget)
-                && mouseTarget.id !== 'printable-area-group') {
-                // without shift key, we regard the action as new select
-                if (!event.shiftKey) {
-                    this.clearSelection();
-                }
-
-                this.addToSelection([mouseTarget]);
-            }
-        } else {
-            this.clearSelection();
         }
     }, 300);
 
     onMouseUp = (event) => {
+        console.log('--onMouseUp mode=', this.mode);
         if (this.mode === 'select' && event.which === 1 && !this.editingElem) {
             this.svgSelector.setVisible(false);
         }
