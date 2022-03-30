@@ -1329,10 +1329,28 @@ export const actions = {
     },
 
     selectAllElements: (headType) => (dispatch, getState) => {
-        const { SVGActions } = getState()[headType];
-        // dispatch(actions.clearSelection(headType));
-        SVGActions.selectAllElements();
-        dispatch(baseActions.render(headType));
+        const { SVGActions, SVGCanvasMode, SVGCanvasExt } = getState()[headType];
+        if (SVGCanvasMode === 'draw' || SVGCanvasExt.elem) {
+            const elem = SVGActions.svgContentGroup.drawGroup.stopDraw();
+            if (elem && SVGCanvasMode === 'draw') {
+                const loop = setInterval(() => {
+                    const svgModel = SVGActions.getSVGModelByElement(elem);
+                    if (svgModel) {
+                        clearInterval(loop);
+                        dispatch(actions.setCanvasMode(headType, 'select'));
+                        SVGActions.selectAllElements();
+                        dispatch(baseActions.render(headType));
+                    }
+                }, 100);
+            } else {
+                dispatch(actions.setCanvasMode(headType, 'select'));
+                SVGActions.selectAllElements();
+                dispatch(baseActions.render(headType));
+            }
+        } else {
+            SVGActions.selectAllElements();
+            dispatch(baseActions.render(headType));
+        }
     },
 
     cut: (headType) => (dispatch) => {

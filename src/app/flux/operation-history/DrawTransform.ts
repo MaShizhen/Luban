@@ -20,17 +20,19 @@ export default class DrawTransform extends Operation<DrawTransformProp> {
 
     public redo() {
         this.state.after.forEach(record => {
-            record.line.updatePosition(record.points);
-            record.line.updatePosition();
+            const line = this.state.drawGroup.getLine(record.fragmentID);
+            line.updatePosition(record.points);
+            line.updatePosition([], true);
         });
         this.state.drawGroup.resetOperationByselect();
     }
 
     public undo() {
         this.state.before.forEach(record => {
-            record.line.updatePosition(record.points);
-            record.line.updatePosition();
+            const line = this.state.drawGroup.getLine(record.fragmentID);
+            line.updatePosition(record.points);
         });
+        this.state.drawGroup.updateAllLinePosition();
         this.state.drawGroup.resetOperationByselect();
     }
 }

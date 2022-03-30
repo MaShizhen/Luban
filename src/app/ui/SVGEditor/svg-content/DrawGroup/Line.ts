@@ -1,4 +1,5 @@
 import { Bezier } from 'bezier-js';
+import { v4 as uuid } from 'uuid';
 import { createSVGElement } from '../../element-utils';
 import { pointRadius, pointSize, ThemeColor, TCoordinate, minimumSpacing } from './constants';
 
@@ -13,13 +14,16 @@ class Line {
 
     public closedLoop: boolean;
 
+    public fragmentID: number;
+
     private scale: number;
 
     private model: Bezier;
 
-    constructor(data: TCoordinate[] | SVGPathElement, scale: number, closedLoop = false) {
+    constructor(data: TCoordinate[] | SVGPathElement, scale: number, closedLoop = false, fragmentID) {
         this.scale = scale;
         this.closedLoop = closedLoop;
+        this.fragmentID = fragmentID;
 
         if (data instanceof SVGPathElement) {
             this.elem = data;
@@ -86,20 +90,25 @@ class Line {
             ] : this.EndPoins;
 
             EndPoins.forEach((item, index) => {
-                const x = item[0] - pointRadius / this.scale;
-                const y = item[1] - pointRadius / this.scale;
+                const x = item[0];
+                const y = item[1];
                 if (applyMerge) {
-                    const circle = document.querySelector<SVGRectElement>(`rect[type="end-point"][x="${x}"][y="${y}"]`);
+                    const circle = document.querySelector<SVGRectElement>(`rect[type="end-point"][cx="${x}"][cy="${y}"]:not([fill=""])`) || document.querySelector<SVGRectElement>(`rect[type="end-point"][cx="${x}"][cy="${y}"]`);
                     if (circle) {
                         if (circle !== this.EndPointsEle[index]) {
                             this.EndPointsEle[index].remove();
                             this.EndPointsEle[index] = circle;
                         }
                         return;
+                    } else {
+                        this.EndPointsEle[index] = this.createCircle(item);
+                        return;
                     }
                 }
-                this.EndPointsEle[index].setAttribute('x', `${x}`);
-                this.EndPointsEle[index].setAttribute('y', `${y}`);
+                this.EndPointsEle[index].setAttribute('x', `${x - pointRadius / this.scale}`);
+                this.EndPointsEle[index].setAttribute('y', `${y - pointRadius / this.scale}`);
+                this.EndPointsEle[index].setAttribute('cx', `${x}`);
+                this.EndPointsEle[index].setAttribute('cy', `${y}`);
             });
         } else {
             const _points = this.parsePoints();
@@ -135,24 +144,34 @@ class Line {
             }
             const circle = Array.from(document.querySelectorAll<SVGRectElement>('rect[type="end-point"]')).find(elem => {
                 return elem.getAttribute('x') === `${item[0] - pointRadiusWithScale}` && elem.getAttribute('y') === `${item[1] - pointRadiusWithScale}`;
-            }) || createSVGElement({
-                element: 'rect',
-                attr: {
-                    type: 'end-point',
-                    fill: '',
-                    'fill-opacity': 1,
-                    rx: `${pointRadiusWithScale}`,
-                    ry: `${pointRadiusWithScale}`,
-                    width: pointSize / this.scale,
-                    height: pointSize / this.scale,
-                    x: item[0] - pointRadiusWithScale,
-                    y: item[1] - pointRadiusWithScale,
-                    stroke: ThemeColor,
-                    'stroke-width': 1 / this.scale,
-                    'pointer-events': 'all'
-                }
-            });
+            })
+                || this.createCircle(item);
             this.EndPointsEle.push(circle);
+        });
+    }
+
+    private createCircle([x, y]: TCoordinate) {
+        const pointRadiusWithScale = pointRadius / this.scale;
+
+        return createSVGElement({
+            element: 'rect',
+            attr: {
+                type: 'end-point',
+                fill: '',
+                'fill-opacity': 1,
+                rx: `${pointRadiusWithScale}`,
+                ry: `${pointRadiusWithScale}`,
+                width: pointSize / this.scale,
+                height: pointSize / this.scale,
+                x: x - pointRadiusWithScale,
+                cx: x,
+                y: y - pointRadiusWithScale,
+                cy: y,
+                stroke: ThemeColor,
+                'stroke-width': 1 / this.scale,
+                'pointer-events': 'all',
+                id: uuid()
+            }
         });
     }
 
@@ -213,6 +232,15 @@ class Line {
         const a = nearestPoint.x - x;
         const b = nearestPoint.y - y;
         return Math.sqrt(a * a + b * b);
+    }
+
+    public isEndpointCoincidence() {
+        const firestEndPoint = this.EndPointsEle[0];
+        const latstEndPoint = this.EndPointsEle[1];
+        return (
+            firestEndPoint.getAttribute('x') === latstEndPoint.getAttribute('x')
+            && firestEndPoint.getAttribute('y') === latstEndPoint.getAttribute('y')
+        );
     }
 }
 

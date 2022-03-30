@@ -419,7 +419,7 @@ class SVGCanvas extends PureComponent {
             if (extShape.elem) {
                 this.editingElem = extShape.elem;
                 const svgModel = this.props.SVGActions.getSVGModelByElement(this.editingElem);
-                this.svgContentGroup.drawGroup.startDraw(this.mode, this.editingElem, svgModel.transformation);
+                this.svgContentGroup.drawGroup.startDraw(mode, this.editingElem, svgModel.transformation);
             } else {
                 this.editingElem = null;
                 jQuery(this.svgContainer).css('cursor', 'auto');
@@ -477,7 +477,7 @@ class SVGCanvas extends PureComponent {
         if (jQuery(target).closest('#selector-parent-group').length) {
             return this.svgContentGroup.selectorParentGroup;
         }
-        if (this.mode === 'select' && target.parentElement === this.preSelectionGroup) {
+        if ((this.mode === 'select' || this.mode === 'move') && target.parentElement === this.preSelectionGroup) {
             const targetId = target.getAttribute('target-id');
             const path = document.querySelector(`path[id="${targetId}"]`);
             if (path) {
@@ -528,7 +528,6 @@ class SVGCanvas extends PureComponent {
         }
         // hide left bar overlay
         this.props.hideLeftBarOverlay();
-        // console.log('--- onMouseDown', this.mode);
         switch (this.mode) {
             case 'select': {
                 if (this.editingElem) {
@@ -792,7 +791,6 @@ class SVGCanvas extends PureComponent {
 
     onMouseMove = (event) => {
         const draw = this.currentDrawing;
-        // console.log('=== onMouseMove', this.mode, draw?.started);
         const matrix = this.svgContentGroup.getScreenCTM().inverse();
         const pt = transformPoint({ x: event.pageX, y: event.pageY }, matrix);
         const x = pt.x;
@@ -1103,7 +1101,6 @@ class SVGCanvas extends PureComponent {
     };
 
     calculateSelectedModel = throttle((event, boxSelect) => {
-        console.log('boxSelect = ', boxSelect);
         const mouseTarget = this.getMouseTarget(event);
         if (boxSelect) {
             const { selectorBbox, onlyContainSelect } = this.svgSelector.getBBox();
@@ -1154,6 +1151,11 @@ class SVGCanvas extends PureComponent {
 
             // being moved
             case 'move': {
+                const dx = x - draw.startX;
+                const dy = y - draw.startY;
+                if (dx === 0 && dy === 0) {
+                    return;
+                }
                 const elements = this.svgContentGroup.selectedElements;
                 this.props.elementActions.moveElementsFinish(elements);
 
