@@ -241,7 +241,7 @@ class OperationGroup {
             return;
         }
         const lasetEndPoint = this.controlsArray[this.controlsArray.length - 1];
-
+        // Judge the distance between the control point and the endpoint
         if (Math.sqrt((lasetEndPoint.x - x) ** 2 + (lasetEndPoint.y - y) ** 2) <= MINIMUM_SPACING) {
             return;
         }
@@ -254,16 +254,19 @@ class OperationGroup {
         if (this.controlsArray.length > 0) {
             const lasetPoint = this.controlsArray[this.controlsArray.length - 1];
             if (lasetPoint instanceof ControlPoint) {
+                // Judge the distance between the control point and the endpoint
                 if (Math.sqrt((lasetPoint.x - x) ** 2 + (lasetPoint.y - y) ** 2) <= MINIMUM_SPACING) {
                     return false;
                 }
                 const lasetEndPoint = this.controlsArray[this.controlsArray.length - 2];
+                // If the two ends of the curve coincide, the painting of the current clip is cancelled
                 if (lasetEndPoint.x === x && lasetEndPoint.y === y) {
                     this.controlsArray = [];
                     this.clearOperation();
                     return false;
                 }
             } else {
+                // If the two ends of the curve coincide, the painting of the current clip is cancelled
                 if (lasetPoint.x === x && lasetPoint.y === y) {
                     this.controlsArray = [];
                     this.clearOperation();

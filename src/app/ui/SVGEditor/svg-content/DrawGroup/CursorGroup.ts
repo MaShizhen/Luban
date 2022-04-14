@@ -147,7 +147,7 @@ class CursorGroup {
         this.group.setAttribute('visibility', visible ? 'visible' : 'hidden');
     }
 
-    public isAttached() {
+    public isCaptured() {
         return this.attachPoint.getAttribute('visibility') === 'visible';
     }
 
@@ -174,7 +174,7 @@ class CursorGroup {
         }
     }
 
-    public keyDown() {
+    public cursorPressed() {
         this.cursorPoint.setAttribute('fill', THEME_COLOR);
     }
 

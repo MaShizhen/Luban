@@ -35,20 +35,44 @@ class DrawGroup {
 
     private endPointsGroup: SVGGElement;
 
+    /**
+     * Draw the completed graphic clip
+     */
     private drawedLine: Line[] = []
 
+    /**
+     * Graphic elements in drawing
+     */
     private graph: SVGPathElement
 
+    /**
+     * Original element in select mode
+     */
     private originGraph: SVGPathElement;
 
+    /**
+     * Path of the original element in select mode
+     */
     private originGraphPath: string;
 
+    /**
+     * transformation of svgModel in select mode
+     */
     private originTransformation: ModelTransformation
 
+    /**
+     * Indicator line parallel to X axis
+     */
     private guideX: SVGLineElement
 
+    /**
+     * Indicator line parallel to Y axis
+     */
     private guideY: SVGLineElement
 
+    /**
+     * Callback after drawing a curve
+     */
     public onDrawLine: (line: SVGPathElement, closedLoop: boolean) => void = noop;
 
     public onDrawDelete: (line: {
@@ -65,29 +89,44 @@ class DrawGroup {
 
     public onDrawTransformComplete: (records: { elem: SVGPathElement, before: string, after: string }) => void = noop;
 
+    /**
+     * Selected line and point in edit mode
+     */
     private selected = {} as {
         line: Line,
         point?: SVGRectElement,
+        /**
+         * index of the selected control point
+         */
         pointIndex?: Number
     };
 
+    /**
+     * Preselected line
+     */
     private preSelectLine: Line;
 
+    /**
+     * Preselected point
+     */
     private preSelectPoint: SVGRectElement;
 
+    /**
+     * Identifies whether adjustments have been made in edit mode
+     */
     private hasTransform: boolean;
 
     private beforeTransform: TransformRecord[] = []
 
     private afterTransform: TransformRecord[] = []
 
-    private attachSpace: number;
+    private captureRange: number;
 
-    private redrawLatestLine: boolean;
+    private isRedrewLatestLine: boolean;
 
-    private latestDrawingCompleted: boolean = false;
+    private isLatestDrawingCompleted: boolean = false;
 
-    private isAttached: boolean
+    private isCaptured: boolean
 
     constructor(contentGroup: SVGGElement, scale: number) {
         this.scale = scale;
@@ -104,7 +143,7 @@ class DrawGroup {
         this.operationGroup.onDrawgraph = (points: Array<[number, number]>) => {
             const latestLine = this.drawedLine[this.drawedLine.length - 1];
             latestLine && latestLine.updatePosition([]);
-            this.latestDrawingCompleted = true;
+            this.isLatestDrawingCompleted = true;
             this.drawgraph(points);
         };
 
@@ -146,7 +185,7 @@ class DrawGroup {
     }
 
     private drawgraph(points: Array<[number, number]>) {
-        const closedLoop = this.cursorGroup.isAttached();
+        const closedLoop = this.cursorGroup.isCaptured();
         const line = this.appendLine(points, closedLoop);
         this.unSelectAllPoint();
         this.endPointsGroup.lastElementChild.setAttribute('fill', THEME_COLOR);
@@ -418,17 +457,18 @@ class DrawGroup {
         this.clearAllConnectLine();
 
         if (this.mode === MODE.DRAW) {
-            this.latestDrawingCompleted = false;
-            if (this.cursorGroup.isAttached() && this.operationGroup.controlsArray.length > 0) {
+            this.isLatestDrawingCompleted = false;
+            if (this.cursorGroup.isCaptured() && this.operationGroup.controlsArray.length > 0) {
+                // set up captured
                 const success = this.operationGroup.setEndPoint(x, y);
                 if (success) {
-                    this.isAttached = true;
+                    this.isCaptured = true;
                 }
             } else {
-                this.isAttached = false;
+                this.isCaptured = false;
                 this.operationGroup.setEndPoint(x, y);
             }
-            this.cursorGroup.keyDown();
+            this.cursorGroup.cursorPressed();
             return;
         }
         if (this.mode === MODE.SELECT) {
@@ -499,12 +539,11 @@ class DrawGroup {
         }
         if (this.mode === MODE.DRAW) {
             this.operationGroup.lastControlsArray = [];
-            if (this.isAttached) {
-                // this.operationGroup.controlsArray = [];
+            if (this.isCaptured) {
                 this.operationGroup.clearOperation();
             }
-            const { x, y, attached } = this.attachCursor(cx, cy);
-            if (attached) {
+            const { x, y, captured } = this.attachCursor(cx, cy);
+            if (captured) {
                 this.cursorGroup.setAttachPoint(x, y);
             } else {
                 this.cursorGroup.setAttachPoint();
@@ -516,11 +555,11 @@ class DrawGroup {
                     this.operationGroup.setControlPoint(...this.cursorPosition);
                 }
             }
-            if (this.redrawLatestLine) {
+            if (this.isRedrewLatestLine) {
                 const latestLine = this.drawedLine[this.drawedLine.length - 1];
                 latestLine && latestLine.updatePosition([]);
             }
-            this.redrawLatestLine = false;
+            this.isRedrewLatestLine = false;
             return;
         }
         if (this.mode === MODE.SELECT) {
@@ -565,9 +604,9 @@ class DrawGroup {
         this.guideY.setAttribute('visibility', visible ? 'visible' : 'hidden');
     }
 
-    private attachCursor(x: number, y: number): { x: number, y: number, attached: boolean } {
+    private attachCursor(x: number, y: number): { x: number, y: number, captured: boolean } {
         this.setGuideLineVisibility(false);
-        let min: number = this.attachSpace;
+        let min: number = this.captureRange;
         let attachPosition: TCoordinate;
         let guideX: TCoordinate;
         let guideY: TCoordinate;
@@ -577,14 +616,14 @@ class DrawGroup {
                 if (selfIndex !== -1 && selfIndex === index) {
                     return;
                 }
-                if (Math.abs(x - p[0]) <= this.attachSpace || Math.abs(y - p[1]) <= this.attachSpace) {
-                    if (Math.abs(x - p[0]) <= this.attachSpace) {
+                if (Math.abs(x - p[0]) <= this.captureRange || Math.abs(y - p[1]) <= this.captureRange) {
+                    if (Math.abs(x - p[0]) <= this.captureRange) {
                         guideX = p;
                     }
-                    if (Math.abs(y - p[1]) <= this.attachSpace) {
+                    if (Math.abs(y - p[1]) <= this.captureRange) {
                         guideY = p;
                     }
-                    if (Math.abs(x - p[0]) <= this.attachSpace && Math.abs(y - p[1]) <= this.attachSpace) {
+                    if (Math.abs(x - p[0]) <= this.captureRange && Math.abs(y - p[1]) <= this.captureRange) {
                         if ((Math.abs(x - p[0]) < min || Math.abs(y - p[1]) < min)) {
                             attachPosition = p;
                             min = Math.min(Math.abs(x - p[0]), Math.abs(y - p[1]));
@@ -606,13 +645,13 @@ class DrawGroup {
                     }
                     const cx = Number(elem.getAttribute('x')) + POINT_RADIUS / this.scale;
                     const cy = Number(elem.getAttribute('y')) + POINT_RADIUS / this.scale;
-                    if (Math.abs(x - cx) <= this.attachSpace) {
+                    if (Math.abs(x - cx) <= this.captureRange) {
                         guideX = [cx, cy];
                     }
-                    if (Math.abs(y - cy) <= this.attachSpace) {
+                    if (Math.abs(y - cy) <= this.captureRange) {
                         guideY = [cx, cy];
                     }
-                    if (Math.abs(x - cx) <= this.attachSpace && Math.abs(y - cy) <= this.attachSpace) {
+                    if (Math.abs(x - cx) <= this.captureRange && Math.abs(y - cy) <= this.captureRange) {
                         if ((Math.abs(x - cx) < min || Math.abs(y - cy) < min)) {
                             attachPosition = [cx, cy];
                             min = Math.min(Math.abs(x - cx), Math.abs(y - cy));
@@ -623,7 +662,7 @@ class DrawGroup {
         }
 
         if (attachPosition) {
-            return { x: attachPosition[0], y: attachPosition[1], attached: true };
+            return { x: attachPosition[0], y: attachPosition[1], captured: true };
         }
 
         if (guideX || guideY) {
@@ -638,7 +677,7 @@ class DrawGroup {
                 this.guideY.setAttribute('x2', `${guideY[0]}`);
                 this.guideY.setAttribute('y2', `${guideY[1]}`);
 
-                return { x: guideX[0], y: guideY[1], attached: false };
+                return { x: guideX[0], y: guideY[1], captured: false };
             }
             if (guideX) {
                 this.guideX.setAttribute('visibility', 'visible');
@@ -646,7 +685,7 @@ class DrawGroup {
                 this.guideX.setAttribute('y1', `${y}`);
                 this.guideX.setAttribute('x2', `${guideX[0]}`);
                 this.guideX.setAttribute('y2', `${guideX[1]}`);
-                return { x: guideX[0], y, attached: false };
+                return { x: guideX[0], y, captured: false };
             }
             if (guideY) {
                 this.guideY.setAttribute('visibility', 'visible');
@@ -654,10 +693,10 @@ class DrawGroup {
                 this.guideY.setAttribute('y1', `${guideY[1]}`);
                 this.guideY.setAttribute('x2', `${guideY[0]}`);
                 this.guideY.setAttribute('y2', `${guideY[1]}`);
-                return { x, y: guideY[1], attached: false };
+                return { x, y: guideY[1], captured: false };
             }
         }
-        return { x, y, attached: false };
+        return { x, y, captured: false };
     }
 
     private transformOperatingPoint([x, y]) {
@@ -794,8 +833,8 @@ class DrawGroup {
         }
         let leftKeyPressed = event.which === 1;
 
-        const { x, y, attached } = this.attachCursor(cx, cy);
-        if (attached) {
+        const { x, y, captured } = this.attachCursor(cx, cy);
+        if (captured) {
             if (this.mode === MODE.SELECT) {
                 if (leftKeyPressed && this.selected.point) {
                     this.cursorGroup.setAttachPoint(x, y);
@@ -806,15 +845,14 @@ class DrawGroup {
         } else {
             this.cursorGroup.setAttachPoint();
         }
-        // const x = cx;
-        // const y = cy;
         this.cursorPosition = [x, y];
 
         if (this.mode === MODE.DRAW) {
             this.setGuideLineVisibility(true);
-            if (leftKeyPressed && !this.latestDrawingCompleted && (
+            if (leftKeyPressed && !this.isLatestDrawingCompleted && (
                 this.operationGroup.lastControlsArray.length === 0 && this.operationGroup.controlsArray.length === 0
             )) {
+                // After canceling the curve drawing, continue to press the left button to drag and start drawing the curve again
                 this.operationGroup.setEndPoint(x, y);
             }
 
@@ -824,18 +862,20 @@ class DrawGroup {
             this.cursorGroup.update(leftKeyPressed, x, y);
             this.operationGroup.updatePrviewByCursor(leftKeyPressed ? new ControlPoint(x, y) : new EndPoint(x, y));
             if (leftKeyPressed && this.drawedLine.length > 0) {
-                if (this.operationGroup.controlsArray.length === 0 && this.latestDrawingCompleted) {
+                if (this.operationGroup.controlsArray.length === 0 && this.isLatestDrawingCompleted) {
+                    // The last curve can still be adjusted after closing
                     const latestLine = this.drawedLine[this.drawedLine.length - 1];
-                    this.redrawLatestLine = true;
+                    this.isRedrewLatestLine = true;
                     latestLine && latestLine.redrawCurve(x, y);
                 } else if (
                     this.operationGroup.lastControlsArray.length > 0
                     && this.operationGroup.controlsArray[this.operationGroup.controlsArray.length - 1] instanceof EndPoint
                 ) {
+                    // Redraws the last connected curve
                     const latestLine = this.drawedLine[this.drawedLine.length - 1];
                     const latestPoint = latestLine.points[latestLine.points.length - 1];
                     if (latestPoint[0] === this.operationGroup.controlsArray[0].x && latestPoint[1] === this.operationGroup.controlsArray[0].y) {
-                        this.redrawLatestLine = true;
+                        this.isRedrewLatestLine = true;
                         latestLine && latestLine.redrawCurve(x, y);
                     }
                 }
@@ -1007,7 +1047,7 @@ class DrawGroup {
 
     public updateScale(scale: number) { // just change the engineer scale
         this.scale = scale;
-        this.attachSpace = ATTACH_SPACE / this.scale;
+        this.captureRange = ATTACH_SPACE / this.scale;
 
         this.cursorGroup.updateScale(this.scale);
         this.operationGroup.updateScale(this.scale);
