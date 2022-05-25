@@ -11,12 +11,16 @@ export enum WorkerMethods {
     gcodeToBufferGeometry = 'gcodeToBufferGeometry',
     loadModel = 'loadModel',
     scaleToFitWithRotate = 'scaleToFitWithRotate',
-    toolpathRenderer = 'toolpathRenderer'
+    toolpathRenderer = 'toolpathRenderer',
+    sortUnorderedLine = 'sortUnorderedLine',
+    translatePolygons = 'translatePolygons',
+    calaClippingWall= 'calaClippingWall',
+    calaClippingSkin = 'calaClippingSkin'
     // LUBAN worker methods END
 }
 
 type IWorkerManager = {
-    [method in WorkerMethods]: (data: unknown[], onmessage: (data: unknown) => void) => {
+    [method in WorkerMethods]: <T>(data: unknown[], onmessage: (data: T) => void) => {
         terminate(): void;
     };
 }
@@ -36,6 +40,10 @@ Object.entries(WorkerMethods).forEach(([, method]) => {
                 })
             )
         ) as WorkerPool;
+
+        // const s = pool.stats();
+        // console.log(`busyWorkers=${s.busyWorkers},pendingTasks=${s.pendingTasks}`);
+
 
         const handle = pool.exec(method, data, {
             on: (payload) => {

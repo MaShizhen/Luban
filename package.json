@@ -277,6 +277,7 @@
     "redux-thunk": "2.3.0",
     "regenerator-runtime": "0.13.9",
     "regression": "2.0.1",
+    "rxjs": "^7.5.5",
     "semver": "5.6.0",
     "serialport": "8.0.8",
     "serve-favicon": "2.5.0",
