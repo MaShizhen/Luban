@@ -43,6 +43,7 @@ export type ModelInfo = {
     sourceWidth?: number,
     originalName?: string,
     uploadName?: string,
+    sourcePly?: string;
     modelName?: string,
     config?: {
         [key: string]: number | boolean | string
@@ -92,7 +93,7 @@ export default class BaseModel extends EventEmitter {
     public modelID: string;
     public originModelID: string;
     public modelName: string;
-    // public visible: boolean;
+    public sourcePly = ''
     public sourceHeight: number;
     public sourceWidth: number;
     public originalName: string;
@@ -114,6 +115,7 @@ export default class BaseModel extends EventEmitter {
 
     public modelGroup: ModelGroup;
     public type: string;
+    public needRepair: boolean;
 
     public extruderConfig: ExtruderConfig;
 
