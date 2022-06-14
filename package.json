@@ -59,6 +59,7 @@
     "build:server": "tsc -p ./tsconfig-server.json"
   },
   "build": {
+    "npmRebuild": false,
     "appId": "com.snapmaker.luban",
     "asar": false,
     "asarUnpack": [],

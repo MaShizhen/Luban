@@ -110,12 +110,6 @@ module.exports = {
                 loader: 'ts-loader'
             },
             {
-                test: /\.jsx?$|\.ts$/,
-                loader: 'eslint-loader',
-                enforce: 'pre',
-                exclude: /node_modules/
-            },
-            {
                 test: /\.jsx?$/,
                 exclude: /(node_modules|bower_components)/,
                 loader: 'babel-loader',
