@@ -485,9 +485,20 @@ export const actions = {
             );
             qualityParamModels.push(paramModel);
         });
+        const defaultDefinitions = definitionManager?.defaultDefinitions.map((eachDefinition) => {
+            if (eachDefinition.definitionId.indexOf('quality.') === 0) {
+                const paramModel = new PresetDefinitionModel(
+                    eachDefinition,
+                    activeMaterialDefinition,
+                    definitionManager.extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
+                );
+                return  paramModel
+            }
+            return eachDefinition
+        })
         dispatch(
             actions.updateState({
-                defaultDefinitions: definitionManager?.defaultDefinitions,
+                defaultDefinitions,
                 materialDefinitions: allMaterialDefinition,
                 qualityDefinitions: qualityParamModels
             })
@@ -690,7 +701,6 @@ export const actions = {
                 [type]: defaultId
             };
         }
-        console.log('defaultQualityId');
         qualityDefinitions.forEach((item) => {
             item?.updateParams && item.updateParams(materialDefinitions.find(d => d.definitionId === defaultId));
         });
@@ -1172,7 +1182,7 @@ export const actions = {
         const definitionsKey = defaultDefinitionKeys[type].definitions;
         const state = getState().printing;
         const defaultDefinitions = state.defaultDefinitions;
-        const definitions = getState().printing[definitionsKey];
+        const definitions = state[definitionsKey];
 
         const newDefModel = cloneDeep(
             defaultDefinitions.find((d) => d.definitionId === definitionId)
@@ -1416,16 +1426,31 @@ export const actions = {
                 default_value: definition.settings[key].default_value
             };
         }
-
-        const createdDefinition = await definitionManager.createDefinition(newDefinition);
+        let createdDefinitionModel = await definitionManager.createDefinition(newDefinition);
+        const { extruderLDefinition } = state;
+        const activeMaterialType = dispatch(actions.getActiveMaterialType());
+        if (createdDefinitionModel.definitionId.indexOf('quality.') === 0) {
+            createdDefinitionModel = new PresetDefinitionModel(
+                createdDefinitionModel,
+                activeMaterialType,
+                extruderLDefinition?.settings?.machine_nozzle_size?.default_value,
+            );
+        }
 
         dispatch(
             actions.updateState({
-                [definitionsKey]: [...state[definitionsKey], createdDefinition]
+                [definitionsKey]: [...state[definitionsKey], createdDefinitionModel]
             })
         );
 
-        return createdDefinition;
+        return createdDefinitionModel;
+    },
+
+    getActiveMaterialType: () => (undefined, getState) => {
+        const {materialDefinitions, defaultMaterialId} = getState().printing;
+        const activeMaterialDefinition = materialDefinitions.find((d) => d.definitionId === defaultMaterialId);
+        return activeMaterialDefinition
+        // return activeMaterialDefinition?.settings?.material_type?.default_value;
     },
 
     duplicateMaterialCategoryDefinitionByType: (
