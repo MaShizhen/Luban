@@ -59,6 +59,9 @@ function startServices(server) {
     socketServer.registerEvent('slice', socketSlice.handleSlice);
     socketServer.registerEvent('generate-support', socketSlice.handleGenerateSupport);
 
+    // repair model
+    socketServer.registerChannel('repair-model', socketSlice.handleRepairModel);
+
     // communication: http & serial port
     socketServer.registerEvent('machine:discover', connectionManager.refreshDevices);
 

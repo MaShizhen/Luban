@@ -98,6 +98,7 @@ function useRenderMainToolBar() {
     const canGroup = useSelector(state => state?.printing?.modelGroup?.canGroup());
     const canMerge = useSelector(state => state?.printing?.modelGroup?.canMerge());
     const canUngroup = useSelector(state => state?.printing?.modelGroup?.canUngroup());
+    const hasModelWhole = useSelector(state => state?.printing?.modelGroup?.hasModelWhole());
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
     const dispatch = useDispatch();
@@ -203,6 +204,15 @@ function useRenderMainToolBar() {
                 name: 'MainToolbarUngroup',
                 action: () => {
                     dispatch(printingActions.ungroup());
+                }
+            },
+            {
+                title: i18n._('key-3DP/MainToolBar-Model repair'),
+                disabled: !hasModelWhole || !enableShortcut,
+                type: 'button',
+                name: 'MainToolbarFixModel',
+                action: () => {
+                    dispatch(printingActions.repairSelectedModels());
                 }
             }
         ];

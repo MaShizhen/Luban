@@ -54,7 +54,9 @@ export const STEP_STAGE = {
     PRINTING_AUTO_ROTATE_SUCCESSED: 44,
     PRINTING_SCALE_TO_FIT_WITH_ROTATE: 45,
     PRINTING_SCALE_TO_FIT_WITH_ROTATE_SUCCESS: 46,
-    PRINTING_SCALE_TO_FIT_WITH_ROTATE_FAILED: 47
+    PRINTING_SCALE_TO_FIT_WITH_ROTATE_FAILED: 47,
+    PRINTING_REPAIRING_MODEL: 48,
+    PRINTING_REPAIR_FAILED: 49,
 };
 
 export const PROCESS_STAGE = {
@@ -76,7 +78,8 @@ export const PROCESS_STAGE = {
     PRINTING_GENERATE_SUPPORT: 9,
     PRINTING_ARRANGE_MODELS: 10,
     PRINTING_AUTO_ROTATE: 11,
-    PRINTING_SCALE_TO_FIT_WITH_ROTATE: 12
+    PRINTING_SCALE_TO_FIT_WITH_ROTATE: 12,
+    PRINTING_REPAIRING_MODEL: 13
 };
 
 const _STATE = {
@@ -276,6 +279,16 @@ class ProgressStatesManager {
             'key-Progress/3DP-Scale to fit...{{progress}}%',
             'key-Progress/3DP-Scale to fit successfully.',
             'key-Progress/3DP-Scale to fit failed.');
+        this.push(PROCESS_STAGE.PRINTING_REPAIRING_MODEL,
+            [
+                {
+                    stageID: STEP_STAGE.PRINTING_REPAIRING_MODEL,
+                    percent: 1
+                }
+            ],
+            'key-Progress/3DP-Repairing model... {{progress}}%',
+            'key-Progress/3DP-Repair model successfully.',
+            'key-Progress/3DP-Failed to repair model.');
     }
 
     push(processStageID, stages, notice, successNotice, failedNotice) {
