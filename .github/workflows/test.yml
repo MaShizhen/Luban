@@ -1,0 +1,45 @@
+name: Build on Release created
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+
+  build-windows:
+    name: Build Windows Packages
+
+    runs-on: windows-2019
+    # runs-on: windows-2016
+
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+            token: ${{ secrets.SACP_TOKEN }}
+            submodules: 'true'
+
+      - name: Init OSS
+        uses: yizhoumo/setup-ossutil@v1
+        with:
+          ossutil-version: '1.7.0'
+          endpoint: ${{ secrets.OSS_ENDPOINT }}
+          access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+      
+      - name: Setting Environment Variables
+        run: |
+          $FILE_NAME="空 格"
+          echo "FILE_NAME=${FILE_NAME}"
+
+      - run: |
+          ossutil cp -f ./output/"${{ env.FILE_NAME }}".md oss://snapmaker/snapmaker.com/download/autoUpdater/1.md
+          ossutil cp -f ./output/"${{ env.FILE_NAME }}.md" oss://snapmaker/snapmaker.com/download/autoUpdater/2.md
+          ossutil cp -f ./output/'${{ env.FILE_NAME }}'.md oss://snapmaker/snapmaker.com/download/autoUpdater/3.md
+          ossutil cp -f ./output/'${{ env.FILE_NAME }}.md' oss://snapmaker/snapmaker.com/download/autoUpdater/4.md
+          ossutil cp -f ./output/${{env.FILE_NAME}}.md oss://snapmaker/snapmaker.com/download/autoUpdater/4.md
+          ossutil cp -f ./output/"空 格.md" oss://snapmaker/snapmaker.com/download/autoUpdater/5.md
+
+    
