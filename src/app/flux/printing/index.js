@@ -63,6 +63,7 @@ import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 // eslint-disable-next-line import/no-cycle
 import { actions as appGlobalActions } from '../app-global';
+import { actions as projectActions } from '../project';
 import definitionManager from '../manager/DefinitionManager';
 import PresetDefinitionModel from '../manager/PresetDefinitionModel';
 // eslint-disable-next-line import/no-cycle
@@ -980,7 +981,7 @@ export const actions = {
             });
 
             // for simplify-model
-            controller.on('simplify-model:started', ({ firstTime, uploadName, transformation, sourcePly }) => {
+            controller.on('simplify-model:started', ({ firstTime, uploadName, transformation }) => {
                 const { progressStatesManager, simplifyOriginModelInfo } = getState().printing;
                 // progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_SIMPLIFY_MODEL);
                 if (firstTime && uploadName) {
@@ -988,7 +989,6 @@ export const actions = {
                         simplifyOriginModelInfo: {
                             ...simplifyOriginModelInfo,
                             uploadName: uploadName,
-                            sourcePly: sourcePly,
                             transformation: transformation,
                         }
                     }));
@@ -1020,13 +1020,13 @@ export const actions = {
             });
 
             controller.on('simplify-model:completed', (params) => {
-                const { modelOutputName, modelID, sourcePly } = params;
-                actions.loadSimplifyModel({ modelID, modelOutputName, sourcePly })(dispatch, getState);
+                const { modelOutputName, modelID } = params;
+                actions.loadSimplifyModel({ modelID, modelOutputName })(dispatch, getState);
             });
         }
     },
 
-    loadSimplifyModel: ({ modelID, modelOutputName, isCancelSimplify = false, sourcePly }) => async (dispatch, getState) => {
+    loadSimplifyModel: ({ modelID, modelOutputName, isCancelSimplify = false }) => async (dispatch, getState) => {
         const { progressStatesManager, simplifyOriginModelInfo, modelGroup } = getState().printing;
         !isCancelSimplify && dispatch(
             actions.updateState({
@@ -1043,11 +1043,9 @@ export const actions = {
         );
         const uploadName = modelOutputName;
         const model = modelGroup.findModelByID(modelID);
-        model.sourcePly = sourcePly;
         await dispatch(actions.updateModelMesh([{
             modelID,
             uploadName,
-            sourcePly,
             reloadSimplifyModel: true
         }], true));
     },
@@ -3792,15 +3790,14 @@ export const actions = {
             parentUploadName = '',
             modelName,
             children,
-            primeTowerTag,
-            sourcePly
+            primeTowerTag
         }
     ) => async (dispatch, getState) => {
         const { progressStatesManager, modelGroup } = getState().printing;
         const { promptDamageModel } = getState().machine;
         const { size } = getState().machine;
         const models = [...modelGroup.models];
-        const modelNames = files || [{ originalName, uploadName, sourcePly, isGroup, parentUploadName, children }];
+        const modelNames = files || [{ originalName, uploadName, isGroup, parentUploadName, children }];
         let _progress = 0;
         const promptTasks = [];
 
@@ -3813,12 +3810,10 @@ export const actions = {
             }, (data) => {
                 if (data.type === 'error') {
                     checkResultMap.set(item.uploadName, {
-                        sourcePly: data.sourcePly,
                         isDamage: true
                     });
                 } else if (data.type === 'success') {
                     checkResultMap.set(item.uploadName, {
-                        sourcePly: data.sourcePly,
                         isDamage: false
                     });
                 }
@@ -3911,8 +3906,7 @@ export const actions = {
                                         modelID: model.modelID,
                                         extruderConfig,
                                         parentModelID,
-                                        parentUploadName: model.parentUploadName,
-                                        sourcePly: model.sourcePly
+                                        parentUploadName: model.parentUploadName
                                     }
                                 );
                                 dispatch(actions.updateState(modelState));
@@ -4072,7 +4066,6 @@ export const actions = {
                         status: 'need-repair-model',
                         model
                     });
-                    model.sourcePly = checkResult.sourcePly;
                     model.needRepair = true;
                 } else {
                     model.needRepair = false;
@@ -4888,7 +4881,6 @@ export const actions = {
         }
         const params = {
             uploadName: simplifyOriginModelInfo.uploadName || simplifyModel.uploadName,
-            sourcePly: simplifyOriginModelInfo.sourcePly || simplifyModel.sourcePly,
             sourceSimplify: uploadResult?.body?.uploadName || simplifyOriginModelInfo.sourceSimplifyName,
             modelID: simplifyModel?.modelID,
             simplifyType,
@@ -4901,16 +4893,14 @@ export const actions = {
     },
 
     recordSimplifyModel: () => (dispatch, getState) => {
-        const { simplifyOriginModelInfo: { sourceSimplifyName, simplifyResultFimeName, sourcePly }, modelGroup } = getState().printing;
+        const { simplifyOriginModelInfo: { sourceSimplifyName, simplifyResultFimeName }, modelGroup } = getState().printing;
         const target = modelGroup.selectedModelArray[0];
         const operations = new Operations();
         const operation = new SimplifyModelOperation({
             target,
             sourceSimplify: sourceSimplifyName,
-            sourcePly: sourcePly,
             dispatch: dispatch,
-            simplifyResultFimeName: simplifyResultFimeName,
-            resultSourcePly: target.sourcePly,
+            simplifyResultFimeName: simplifyResultFimeName
         });
         operations.push(operation);
         dispatch(
@@ -5043,6 +5033,7 @@ export const actions = {
         dispatch(actions.applyProfileToAllModels());
         dispatch(actions.displayModel());
         dispatch(actions.destroyGcodeLine());
+        dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
     },
 
     repairSelectedModels: () => async (dispatch, getState) => {
