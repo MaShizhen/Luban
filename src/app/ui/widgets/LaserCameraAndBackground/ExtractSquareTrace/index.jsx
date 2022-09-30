@@ -703,7 +703,6 @@ class ExtractSquareTrace extends PureComponent {
                             if (img) {
                                 this.props.setBackgroundImage(img);
                             }
-                            console.log('=> onClipImage', img);
                         }}
                     />
                 )}
